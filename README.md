@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
 | onSearch | `Function(String)` | :heavy_check_mark: | Returns the current search value<br/>When search is closed, this method returns an empty value to clear the current search |  |
 | onClose | `Function` | :x: | Executes extra actions when search is closed |  |
 | centerTitle | `bool` | :x: | Centers the appBar title | false |
-| animationDuration | `Duration` | :x: | Duration for the appBar search show and hide |  |
+| animationDuration | `Duration` | :x: | Duration for the appBar search show and hide | Duration(milliseconds: 350) |
 | inputDecoration | `InputDecoration` | :x: | Sets custom input decoration for the search TextField | InputDecoration( border: InputBorder.none ) |
 | inputTextStyle | `TextStyle` | :x: | Sets custom style for the search TextField search text | TextStyle( color: Colors.white, fontStyle: FontStyle.italic ) |
 | titleStyle | `TextStyle` | :x: | Sets custom title style | TextStyle( color: Colors.white ) |
