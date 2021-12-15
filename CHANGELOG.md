@@ -1,4 +1,4 @@
-## 2.0.0 - 02-12-2021
+## 2.0.0 - 16-12-2021
 
 ### Changes
 * Updating widget so can be used as AppBar instead of being used inside AppBar title
