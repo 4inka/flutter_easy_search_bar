@@ -29,132 +29,203 @@ library easy_search_bar;
 
 import 'package:flutter/material.dart';
 
-class EasySearchBar extends StatefulWidget {
+class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
+  final Color? foregroundColor;
+  final double toolbarHeight;
   /// The title to be displayed inside appBar
-  final String title;
+  final Text title;
+  final List<Widget> actions;
   /// Returns the current search value
   /// When search is closed, this method returns an empty value to clear the current search
   final Function(String) onSearch;
-  /// Executes extra actions when search is closed
-  final Function? onClose;
-  /// Centers the appBar title
   final bool centerTitle;
   /// Duration for the appBar search show and hide
   final Duration animationDuration;
-  /// Sets custom input decoration for the search TextField
-  final InputDecoration inputDecoration;
-  /// Sets custom style for the search TextField search text
-  final TextStyle inputTextStyle;
-  /// Sets custom title style
-  final TextStyle titleStyle;
+  final bool isFloating;
   /// Sets custom cursor color
   final Color? cursorColor;
 
-  /// Creates a widget that can be used to manage search inside your application
-  EasySearchBar({
+  const EasySearchBar({
+    Key? key,
     required this.title,
     required this.onSearch,
-    this.onClose,
+    this.actions = const [],
+    this.foregroundColor,
+    this.toolbarHeight = 56,
     this.centerTitle = false,
-    this.animationDuration = const Duration(milliseconds: 350),
-    this.inputDecoration = const InputDecoration(
-      border: InputBorder.none
-    ),
-    this.inputTextStyle = const TextStyle(
-      color: Colors.white,
-      fontStyle: FontStyle.italic
-    ),
-    this.titleStyle = const TextStyle(
-      color: Colors.white
-    ),
-    this.cursorColor
-  });
+    this.cursorColor,
+    this.isFloating = false,
+    this.animationDuration = const Duration(milliseconds: 450),
+  }) : super(key: key);
 
   @override
-  _EasySearchBarState createState() => _EasySearchBarState();
+  State<EasySearchBar> createState() => _EasySearchBarState();
+
+  @override
+  Size get preferredSize => const Size.fromHeight(56);
 }
 
-class _EasySearchBarState extends State<EasySearchBar> with SingleTickerProviderStateMixin {
-  bool _searchOpened = false;
-  late Widget _animatedIcon;
-  late TextField _textField;
-  final TextEditingController _textEditingController = TextEditingController();
+class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation _containerSizeAnimation;
+  late Animation _containerBorderRadiusAnimation;
+  late Animation _textfieldOpacityAnimation;
+  late TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
-    _animatedIcon = Icon(
-      Icons.search,
-      key: ValueKey('search')
+    _controller = AnimationController(
+      vsync:  this ,
+      duration: widget.animationDuration
     );
-  }
-
-  void _onButtonPressed() {
-    setState(() {
-      _searchOpened = !_searchOpened;
+    _containerSizeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.55, curve: Curves.easeIn),
+      ),
+    );
+    _containerBorderRadiusAnimation = Tween<double>(begin: 1, end: 0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.55, curve: Curves.easeIn),
+      ),
+    );
+    _textfieldOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.45, 1, curve: Curves.easeIn),
+      ),
+    );
+    _controller.forward();
+    _searchController = TextEditingController();
+    _searchController.addListener(() {
+      widget.onSearch(_searchController.text);
     });
-    if (_searchOpened) {
-      setState(() {
-        _animatedIcon = Icon(
-          Icons.close,
-          key: ValueKey('close_icon')
-        );
-      });
-    }
-    else {
-      setState(() {
-        _animatedIcon = Icon(Icons.search, key: ValueKey('search_icon'));
-        _textEditingController.text = '';
-        widget.onSearch('');
-        if (widget.onClose != null) widget.onClose!();
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: AnimatedCrossFade(
-            duration: widget.animationDuration,
-            reverseDuration: widget.animationDuration,
-            firstChild: Align(
-              alignment: widget.centerTitle ? Alignment.center : Alignment.centerLeft,
-              child: Text(
-                widget.title,
-                textAlign: TextAlign.end,
-                style: widget.titleStyle
+    final ThemeData theme = Theme.of(context);
+    final AppBarTheme appBarTheme = AppBarTheme.of(context);
+    final ScaffoldState? scaffold = Scaffold.maybeOf(context);
+
+    Color? foregroundColor = widget.foregroundColor ?? appBarTheme.foregroundColor ?? theme.primaryColor;
+    IconThemeData overallIconTheme = appBarTheme.iconTheme
+        ?? theme.iconTheme.copyWith(color: foregroundColor);
+
+    TextStyle? titleTextStyle = appBarTheme.titleTextStyle
+        ?? theme.textTheme.headline6;
+
+    return SafeArea(
+      bottom: false,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Container(
+            margin: EdgeInsets.all(widget.isFloating ? 5 : 0),
+            child: Material(
+              elevation: 5,
+              color: foregroundColor,
+              child: Stack(
+                children: [
+                  Container(
+                    height: widget.toolbarHeight,
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(
+                      top: 10,
+                      left: 10,
+                      right: 10,
+                      bottom: 10
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Visibility(
+                          visible: scaffold?.hasDrawer ?? false,
+                          child: IconButton(
+                            icon: const Icon(Icons.menu),
+                            iconSize: overallIconTheme.size ?? 24,
+                            onPressed: () => scaffold!.openDrawer(),
+                            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                          )
+                        ),
+                        Expanded(
+                          child: DefaultTextStyle(
+                            style: titleTextStyle!,
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            child: widget.title,
+                          )
+                        ),
+                        ...List.generate(widget.actions.length + 1, (index) {
+                          if (widget.actions.length == index) {
+                            return IconButton(
+                              icon: const Icon(Icons.search),
+                              iconSize: overallIconTheme.size ?? 24,
+                              onPressed: () => _controller.forward(),
+                              tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                            );
+                          }
+              
+                          return widget.actions[index];
+                        })
+                      ]
+                    )
+                  ),
+                  Positioned(
+                    right: 0,
+                    child: AnimatedBuilder(
+                      animation: _controller,
+                      builder: (context, child) {
+                        return Container(
+                          alignment: Alignment.center,
+                          height: constraints.maxHeight,
+                          width: _containerSizeAnimation.value * constraints.maxWidth,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular((50 * _containerBorderRadiusAnimation.value).toDouble()),
+                              topLeft: Radius.circular((50 * _containerBorderRadiusAnimation.value).toDouble()),
+                            ),
+                            color: Colors.white
+                          ),
+                          child: Opacity(
+                            opacity: _textfieldOpacityAnimation.value,
+                            child: TextField(
+                              controller: _searchController,
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                suffixIcon: IconButton(
+                                  color: Colors.red,
+                                  icon: const Icon(
+                                    Icons.close
+                                  ),
+                                  onPressed: () {
+                                    _controller.reverse();
+                                    _searchController.clear();
+                                  }
+                                )
+                              )
+                            ),
+                          )
+                        );
+                      },
+                    ),
+                  )
+                ]
               )
             ),
-            secondChild: TextField(
-              controller: _textEditingController,
-              cursorColor: widget.cursorColor ?? Colors.white,
-              autofocus: true,
-              decoration: widget.inputDecoration,
-              style: widget.inputTextStyle,
-              onChanged:  (value) => widget.onSearch(value)
-            ),
-            crossFadeState: _searchOpened ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-          )
-        ),
-        IconButton(
-          icon: AnimatedSwitcher(
-            duration: widget.animationDuration,
-            child: _animatedIcon,
-            transitionBuilder: (child, animation) {
-              return ScaleTransition(
-                scale: animation,
-                child: child
-              );
-            }
-          ),
-          onPressed: () => _onButtonPressed()
-        )
-      ]
+          );
+        }
+      )
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
