@@ -27,11 +27,14 @@
 
 library easy_search_bar;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final Color? foregroundColor;
   final double toolbarHeight;
+  final FutureOr<List<String>>? suggestions;
   /// The title to be displayed inside appBar
   final Text title;
   final List<Widget> actions;
@@ -50,6 +53,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     required this.title,
     required this.onSearch,
     this.actions = const [],
+    this.suggestions,
     this.foregroundColor,
     this.toolbarHeight = 56,
     this.centerTitle = false,
@@ -66,6 +70,14 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateMixin {
+  final LayerLink _layerLink = LayerLink();
+  bool _hasOpenedOverlay = false;
+  bool _isLoading = false;
+  OverlayEntry? _overlayEntry;
+  List<String> _suggestions = [];
+  Timer? _debounce;
+  String _previousAsyncSearchText = '';
+
   late AnimationController _controller;
   late Animation _containerSizeAnimation;
   late Animation _containerBorderRadiusAnimation;
@@ -97,11 +109,95 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
         curve: const Interval(0.45, 1, curve: Curves.easeIn),
       ),
     );
-    _controller.forward();
+   // _controller.forward();
     _searchController = TextEditingController();
     _searchController.addListener(() {
       widget.onSearch(_searchController.text);
     });
+    // TODO: set async suggestions
+    // TODO: detect key enter press to dismiss suggestions
+    // TODO: set suggestions list animation
+
+    // TODO: add suppirt for back button in appbar
+    Future.delayed(Duration.zero, () async {  _suggestions = await widget.suggestions!; });
+  }
+
+  void openOverlay() {
+    if (_overlayEntry == null && widget.suggestions != null) {
+      RenderBox renderBox = context.findRenderObject() as RenderBox;
+      var size = renderBox.size;
+      var offset = renderBox.localToGlobal(Offset.zero);
+
+      _overlayEntry ??= OverlayEntry(
+        builder: (context) => Positioned(
+          left: offset.dx,
+          top: offset.dy + size.height,
+          width: size.width,
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: Offset(0.0, size.height),
+            child: Container(
+              constraints: const BoxConstraints(
+                maxHeight: 150
+              ),
+              margin: const EdgeInsets.all(5),
+              child: Material(
+                elevation: 5,
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: _suggestions.length,
+                  itemBuilder: (context, index) {
+                    return InkWell(
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        child: Text(
+                          _suggestions[index],
+                          // thisstyle: suggestionTextStyle
+                        )
+                      ),
+                      onTap: () => _searchController.text = _suggestions[index]
+                    );
+                  },
+                ),
+              ),
+            )
+          )
+        )
+      );
+    }
+    if (!_hasOpenedOverlay && widget.suggestions != null) {
+      Overlay.of(context)!.insert(_overlayEntry!);
+      setState(() => _hasOpenedOverlay = true );
+    }
+  }
+
+  void closeOverlay() {
+    if (_hasOpenedOverlay) {
+      _overlayEntry!.remove();
+      setState(() => _hasOpenedOverlay = false );
+    }
+  }
+
+  Future<void> updateSuggestions(String input) async {
+    rebuildOverlay();
+    if (widget.suggestions != null) {
+      _suggestions = await widget.suggestions!;
+      _suggestions = _suggestions.where((element) {
+        return element.toLowerCase().contains(input.toLowerCase());
+      }).toList();
+      rebuildOverlay();
+    }
+  }
+
+  void rebuildOverlay() {
+    if(_overlayEntry != null) {
+      _overlayEntry!.markNeedsBuild();
+    }
   }
 
   @override
@@ -117,109 +213,124 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
     TextStyle? titleTextStyle = appBarTheme.titleTextStyle
         ?? theme.textTheme.headline6;
 
-    return SafeArea(
-      bottom: false,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Container(
-            margin: EdgeInsets.all(widget.isFloating ? 5 : 0),
-            child: Material(
-              elevation: 5,
-              color: foregroundColor,
-              child: Stack(
-                children: [
-                  Container(
-                    height: widget.toolbarHeight,
-                    width: double.infinity,
-                    padding: const EdgeInsets.only(
-                      top: 10,
-                      left: 10,
-                      right: 10,
-                      bottom: 10
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Visibility(
-                          visible: scaffold?.hasDrawer ?? false,
-                          child: IconButton(
-                            icon: const Icon(Icons.menu),
-                            iconSize: overallIconTheme.size ?? 24,
-                            onPressed: () => scaffold!.openDrawer(),
-                            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                          )
-                        ),
-                        Expanded(
-                          child: DefaultTextStyle(
-                            style: titleTextStyle!,
-                            softWrap: false,
-                            overflow: TextOverflow.ellipsis,
-                            child: widget.title,
-                          )
-                        ),
-                        ...List.generate(widget.actions.length + 1, (index) {
-                          if (widget.actions.length == index) {
-                            return IconButton(
-                              icon: const Icon(Icons.search),
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: SafeArea(
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Container(
+              margin: EdgeInsets.all(widget.isFloating ? 5 : 0),
+              child: Material(
+                elevation: 5,
+                color: foregroundColor,
+                child: Stack(
+                  children: [
+                    Container(
+                      height: widget.toolbarHeight,
+                      width: double.infinity,
+                      padding: const EdgeInsets.only(
+                        top: 10,
+                        left: 5,
+                        right: 3,
+                        bottom: 10
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Visibility(
+                            visible: scaffold?.hasDrawer ?? false,
+                            child: IconButton(
+                              icon: const Icon(Icons.menu),
                               iconSize: overallIconTheme.size ?? 24,
-                              onPressed: () => _controller.forward(),
+                              onPressed: () => scaffold!.openDrawer(),
                               tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                            );
-                          }
-              
-                          return widget.actions[index];
-                        })
-                      ]
-                    )
-                  ),
-                  Positioned(
-                    right: 0,
-                    child: AnimatedBuilder(
-                      animation: _controller,
-                      builder: (context, child) {
-                        return Container(
-                          alignment: Alignment.center,
-                          height: constraints.maxHeight,
-                          width: _containerSizeAnimation.value * constraints.maxWidth,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular((50 * _containerBorderRadiusAnimation.value).toDouble()),
-                              topLeft: Radius.circular((50 * _containerBorderRadiusAnimation.value).toDouble()),
-                            ),
-                            color: Colors.white
+                            )
                           ),
-                          child: Opacity(
-                            opacity: _textfieldOpacityAnimation.value,
-                            child: TextField(
-                              controller: _searchController,
-                              autofocus: true,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                suffixIcon: IconButton(
-                                  color: Colors.red,
-                                  icon: const Icon(
-                                    Icons.close
-                                  ),
-                                  onPressed: () {
-                                    _controller.reverse();
-                                    _searchController.clear();
-                                  }
-                                )
-                              )
-                            ),
-                          )
-                        );
-                      },
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 20),
+                              child: DefaultTextStyle(
+                                style: titleTextStyle!,
+                                softWrap: false,
+                                overflow: TextOverflow.ellipsis,
+                                child: widget.title,
+                              ),
+                            )
+                          ),
+                          ...List.generate(widget.actions.length + 1, (index) {
+                            if (widget.actions.length == index) {
+                              return IconButton(
+                                icon: const Icon(Icons.search),
+                                iconSize: overallIconTheme.size ?? 24,
+                                onPressed: () {
+                                  _controller.forward();
+                                  openOverlay();
+                                },
+                                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+                              );
+                            }
+                
+                            return widget.actions[index];
+                          })
+                        ]
+                      )
                     ),
-                  )
-                ]
-              )
-            ),
-          );
-        }
-      )
+                    Positioned(
+                      right: 0,
+                      child: AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) {
+                          return Container(
+                            alignment: Alignment.center,
+                            height: constraints.maxHeight,
+                            width: _containerSizeAnimation.value * constraints.maxWidth,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(_containerBorderRadiusAnimation.value * 50),
+                                topLeft: Radius.circular(_containerBorderRadiusAnimation.value * 50),
+                              ),
+                              color: Colors.white
+                            ),
+                            child: Opacity(
+                              opacity: _textfieldOpacityAnimation.value,
+                              child: TextField(
+                                controller: _searchController,
+                                autofocus: true,
+                                textAlignVertical: TextAlignVertical.center,
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.only(
+                                    left: 20,
+                                    right: 10,
+                                  ),
+                                  border: InputBorder.none,
+                                  suffixIcon: IconButton(
+                                    color: Colors.red,
+                                    icon: const Icon(
+                                      Icons.close
+                                    ),
+                                    onPressed: () {
+                                      closeOverlay();
+                                      _controller.reverse();
+                                      _searchController.clear();
+                                    }
+                                  )
+                                )
+                              ),
+                            )
+                          );
+                        },
+                      ),
+                    )
+                  ]
+                )
+              ),
+            );
+          }
+        )
+      ),
     );
   }
 
