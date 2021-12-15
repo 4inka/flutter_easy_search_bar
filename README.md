@@ -15,7 +15,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 ``` yaml
 dependencies:
   ...
-  easy_search_bar: ^1.0.0
+  easy_search_bar: ^2.0.0
 ```
 
 You can create a simple searchbar widget with the following example:
