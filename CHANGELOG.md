@@ -2,6 +2,7 @@
 
 ### Added
 * Added suggestions functionality
+* Param to make appBar float
 
 ### Changes
 * Updating widget so can be used as AppBar instead of being used inside AppBar title
