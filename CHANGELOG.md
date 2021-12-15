@@ -1,5 +1,8 @@
 ## 2.0.0 - 16-12-2021
 
+### Added
+* Added suggestions functionality
+
 ### Changes
 * Updating widget so can be used as AppBar instead of being used inside AppBar title
 
