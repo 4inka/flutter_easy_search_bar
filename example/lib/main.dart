@@ -34,6 +34,18 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               onPressed: () {},
             )
+          ],
+          suggestions: const [
+            'Suggestion 1',
+            'Suggestion 2',
+            'Suggestion 3',
+            'Suggestion 4',
+            'Suggestion 5',
+            'Suggestion 6',
+            'Suggestion 7',
+            'Suggestion 8',
+            'Suggestion 9',
+            'Suggestion 10'
           ]
         ),
         drawer: Drawer(
