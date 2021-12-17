@@ -36,7 +36,8 @@ class FilterableList extends StatelessWidget {
   final Color? suggestionBackgroundColor;
   final bool loading;
 
-  FilterableList({
+  const FilterableList({
+    Key? key,
     required this.items,
     required this.onItemTapped,
     this.elevation = 5,
@@ -44,7 +45,7 @@ class FilterableList extends StatelessWidget {
     this.suggestionTextStyle = const TextStyle(),
     this.suggestionBackgroundColor,
     this.loading = false
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -65,8 +66,8 @@ class FilterableList extends StatelessWidget {
               if (loading) {
                 return Container(
                   alignment: Alignment.center,
-                  padding: EdgeInsets.all(10),
-                  child: CircularProgressIndicator()
+                  padding: const EdgeInsets.all(10),
+                  child: const CircularProgressIndicator()
                 );
               }
 
@@ -75,7 +76,7 @@ class FilterableList extends StatelessWidget {
                 child: InkWell(
                   child: Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(10),
                     child: Text(
                       items[index],
                       style: suggestionTextStyle
