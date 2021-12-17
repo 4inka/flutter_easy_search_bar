@@ -140,15 +140,16 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
       ),
     );
     _searchController.addListener(() async {
-      widget.onSearch(_searchController.text);
-      if (widget.suggestions != null) {
-        updateSyncSuggestions(_searchController.text);
-      }
-      else if (widget.asyncSuggestions != null) {
-         updateAsyncSuggestions(_searchController.text);
+      if (_focusNode.hasFocus) {
+        widget.onSearch(_searchController.text);
+        if (widget.suggestions != null) {
+          updateSyncSuggestions(_searchController.text);
+        }
+        else if (widget.asyncSuggestions != null) {
+          updateAsyncSuggestions(_searchController.text);
+        }
       }
     });
-    // TODO: detect key enter press to dismiss suggestions
     // TODO: set suggestions list animation
     // TODO: add custom suggestion builder
   }
@@ -376,7 +377,14 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                             child: Opacity(
                               opacity: _textfieldOpacityAnimation.value,
                               child: TextField(
+                                onSubmitted: (value) {
+                                  widget.onSearch(_searchController.text);
+                                  closeOverlay();
+                                  _focusNode.unfocus();
+                                },
+                                maxLines: 1,
                                 controller: _searchController,
+                                textInputAction: TextInputAction.search,
                                 cursorColor: cursorColor,
                                 focusNode: _focusNode,
                                 textAlignVertical: TextAlignVertical.center,
