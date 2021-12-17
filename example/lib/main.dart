@@ -14,6 +14,15 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String searchValue = '';
+  final List<String> _suggestions = ['Afeganistan', 'Albania', 'Algeria', 'Australia', 'Brazil', 'German', 'Madagascar', 'Mozambique', 'Portugal', 'Zambia'];
+
+  Future<List<String>> _fetchSuggestions(String searchValue) async {
+    await Future.delayed(const Duration(milliseconds: 750));
+
+    return _suggestions.where((element) {
+      return element.toLowerCase().contains(searchValue.toLowerCase());
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
           title: const Text('Example'),
           isFloating: false,
           onSearch: (value) => setState(() => searchValue = value),
+          searchHintText: 'Hint text',
           actions: [
             IconButton(
               icon: const Icon(
@@ -35,18 +45,8 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {}
             )
           ],
-          suggestions: const [
-            'Suggestion 1',
-            'Suggestion 2',
-            'Suggestion 3',
-            'Suggestion 4',
-            'Suggestion 5',
-            'Suggestion 6',
-            'Suggestion 7',
-            'Suggestion 8',
-            'Suggestion 9',
-            'Suggestion 10'
-          ]
+          asyncSuggestions: (value) async => await _fetchSuggestions(value)
+          //suggestions: _suggestions
         ),
         drawer: Drawer(
           child: ListView(
