@@ -150,6 +150,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
     });
     // TODO: detect key enter press to dismiss suggestions
     // TODO: set suggestions list animation
+    // TODO: add custom suggestion builder
   }
 
   void openOverlay() {
