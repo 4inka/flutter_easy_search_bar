@@ -35,11 +35,13 @@ class FilterableList extends StatelessWidget {
   final TextStyle suggestionTextStyle;
   final Color? suggestionBackgroundColor;
   final bool loading;
+  final Widget Function(String data)? suggestionBuilder; 
 
   const FilterableList({
     Key? key,
     required this.items,
     required this.onItemTapped,
+    this.suggestionBuilder,
     this.elevation = 5,
     this.maxListHeight = 150,
     this.suggestionTextStyle = const TextStyle(),
@@ -52,6 +54,7 @@ class FilterableList extends StatelessWidget {
     return Material(
       elevation: 5,
       borderRadius: BorderRadius.circular(5),
+      color: suggestionBackgroundColor ?? Colors.white,
       child: Container(
         constraints: BoxConstraints(
           maxHeight: maxListHeight
@@ -60,7 +63,7 @@ class FilterableList extends StatelessWidget {
           visible: items.isNotEmpty || loading,
           child: ListView.builder(
             shrinkWrap: true,
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.all(5),
             itemCount: loading ? 1 : items.length,
             itemBuilder: (context, index) {
               if (loading) {
@@ -71,12 +74,18 @@ class FilterableList extends StatelessWidget {
                 );
               }
 
+              if (suggestionBuilder != null) {
+                return InkWell(
+                  child: suggestionBuilder!(items[index]),
+                  onTap: () => onItemTapped(items[index])
+                );
+              }
+
               return Material(
-                color: suggestionBackgroundColor ?? Colors.transparent,
                 child: InkWell(
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(5),
                     child: Text(
                       items[index],
                       style: suggestionTextStyle
