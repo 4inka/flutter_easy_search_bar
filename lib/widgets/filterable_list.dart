@@ -33,6 +33,7 @@ class FilterableList extends StatelessWidget {
   final double elevation;
   final double maxListHeight;
   final TextStyle suggestionTextStyle;
+  final Widget? loader;
   final Color? suggestionBackgroundColor;
   final bool loading;
   final Widget Function(String data)? suggestionBuilder; 
@@ -41,6 +42,7 @@ class FilterableList extends StatelessWidget {
     Key? key,
     required this.items,
     required this.onItemTapped,
+    this.loader,
     this.suggestionBuilder,
     this.elevation = 5,
     this.maxListHeight = 150,
@@ -67,11 +69,7 @@ class FilterableList extends StatelessWidget {
             itemCount: loading ? 1 : items.length,
             itemBuilder: (context, index) {
               if (loading) {
-                return Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(10),
-                  child: const CircularProgressIndicator()
-                );
+                return loader!;
               }
 
               if (suggestionBuilder != null) {
