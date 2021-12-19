@@ -46,7 +46,6 @@ class _MyHomePageState extends State<MyHomePage> {
             )
           ],
           asyncSuggestions: (value) async => await _fetchSuggestions(value)
-          //suggestions: _suggestions
         ),
         drawer: Drawer(
           child: ListView(
