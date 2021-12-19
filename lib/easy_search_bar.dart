@@ -62,11 +62,13 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final Duration debounceDuration;
   final TextStyle suggestionTextStyle;
   final Color? suggestionBackgroundColor;
+  final Widget Function(String data)? suggestionBuilder; 
 
   const EasySearchBar({
     Key? key,
     required this.title,
     required this.onSearch,
+    this.suggestionBuilder,
     this.actions = const [],
     this.searchHintStyle,
     this.searchTextStyle = const TextStyle(),
@@ -150,8 +152,6 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
         }
       }
     });
-    // TODO: set suggestions list animation
-    // TODO: add custom suggestion builder
   }
 
   void openOverlay() {
@@ -177,6 +177,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
               child: FilterableList(
                 loading: _isLoading,
                 items: _suggestions,
+                suggestionBuilder: widget.suggestionBuilder,
                 elevation: widget.suggestionsElevation,
                 suggestionTextStyle: widget.suggestionTextStyle,
                 suggestionBackgroundColor: widget.suggestionBackgroundColor,
@@ -407,6 +408,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                       onPressed: () {
                                         _controller.reverse();
                                         _searchController.clear();
+                                        widget.onSearch(_searchController.text);
                                         closeOverlay();
                                       }
                                     )
