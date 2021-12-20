@@ -34,17 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
       home: Scaffold(
         appBar: EasySearchBar(
           title: const Text('Example'),
-          isFloating: false,
           onSearch: (value) => setState(() => searchValue = value),
-          searchHintText: 'Hint text',
-          actions: [
-            IconButton(
-              icon: const Icon(
-                Icons.person,
-              ),
-              onPressed: () {}
-            )
-          ],
           asyncSuggestions: (value) async => await _fetchSuggestions(value)
         ),
         drawer: Drawer(
