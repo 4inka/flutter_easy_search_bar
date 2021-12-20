@@ -119,7 +119,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   State<EasySearchBar> createState() => _EasySearchBarState();
 
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => Size.fromHeight(appBarHeight + (isFloating ? 5 : 0));
 }
 
 class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateMixin {
@@ -329,14 +329,20 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
         child: LayoutBuilder(
           builder: (context, constraints) {
             return Container(
-              margin: EdgeInsets.all(widget.isFloating ? 5 : 0),
+              margin: EdgeInsets.only(
+                top: widget.isFloating ? 5 : 0,
+                left: widget.isFloating ? 5 : 0,
+                right: widget.isFloating ? 5 : 0
+              ),
+              height: 66,
               child: Material(
                 elevation: elevation,
                 color: backgroundColor,
+                borderRadius: BorderRadius.circular(widget.isFloating ? 5 : 0),
                 child: Stack(
                   children: [
                     Container(
-                      height: widget.appBarHeight,
+                      height: widget.appBarHeight + (widget.isFloating ? 5 : 0),
                       width: double.infinity,
                       padding: const EdgeInsets.only(
                         top: 10,
@@ -409,17 +415,20 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                     ),
                     Positioned(
                       right: 0,
+                      top: 0,
                       child: AnimatedBuilder(
                         animation: _controller,
                         builder: (context, child) {
                           return Container(
                             alignment: Alignment.center,
-                            height: constraints.maxHeight,
-                            width: _containerSizeAnimation.value * constraints.maxWidth,
+                            height: constraints.maxHeight - (widget.isFloating ? 5 : 0),
+                            width: _containerSizeAnimation.value * constraints.maxWidth - (_containerSizeAnimation.value * (widget.isFloating ? 10 : 0)),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30),
-                                topLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30)
+                                bottomLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30 + (widget.isFloating ? 5 : 0)),
+                                topLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30 + (widget.isFloating ? 5 : 0)),
+                                topRight: Radius.circular(widget.isFloating ? 5 : 0),
+                                bottomRight: Radius.circular(widget.isFloating ? 5 : 0)
                               ),
                               color: searchColor
                             ),
