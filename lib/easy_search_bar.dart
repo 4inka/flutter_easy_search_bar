@@ -30,39 +30,61 @@ library easy_search_bar;
 import 'dart:async';
 
 import 'package:easy_search_bar/widgets/filterable_list.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
-  final Color? backgroundColor;
-  final Color? foregroundColor;
-  final double? elevation;
-  final double toolbarHeight;
-  final double suggestionsElevation;
-  final List<String>? suggestions;
-  final Future<List<String>> Function(String value)? asyncSuggestions;
-  final IconThemeData? iconTheme;
-  /// The title to be displayed inside appBar
-  final Text title;
-  final List<Widget> actions;
-  /// Returns the current search value
+  /// The title to be displayed inside AppBar
+  final Widget title;
   /// When search is closed, this method returns an empty value to clear the current search
   final Function(String) onSearch;
-  final bool centerTitle;
+  /// Extra custom actions that can be displayed inside AppBar
+  final List<Widget> actions;
+  /// Can be used to change AppBar background color
+  final Color? backgroundColor;
+  /// Can be used to change AppBar foreground color
+  final Color? foregroundColor;
+  /// Can be used to change AppBar elevation
+  final double? elevation;
+  /// Can be used to set custom icon theme
+  final IconThemeData? iconTheme;
+  /// Can be used to change AppBar height
+  final double appBarHeight;
   /// Duration for the appBar search show and hide
   final Duration animationDuration;
+  /// Can be used to determine if it will be a normal or floating AppBar
   final bool isFloating;
-  /// Sets custom cursor color
-  final Color? cursorColor;
+  /// Can be used to set the AppBar title style
   final TextStyle? titleTextStyle;
-  final String searchHintText;
-  final IconThemeData? searchBackIconTheme;
+  /// Can be used to set search textfield cursor color
   final Color? searchCursorColor;
+  /// Can be used to set search textfield hint text
+  final String searchHintText;
+  /// Can be used to set search textfield hint style
   final TextStyle? searchHintStyle;
+  /// Can be used to set search textfield text style
   final TextStyle searchTextStyle;
-  final Duration debounceDuration;
+  /// Can be used to set custom icon theme for the search textfield back button
+  final IconThemeData? searchBackIconTheme;
+  /// Can be used to create a suggestions list
+  final List<String>? suggestions;
+  /// Can be used to set async suggestions list
+  final Future<List<String>> Function(String value)? asyncSuggestions;
+  /// Can be used to change suggestion list elevation
+  final double suggestionsElevation;
+  /// A function that can be used to create a widget to display a custom suggestions loader
+  final Widget? Function()? suggestionLoaderBuilder;
+  /// Can be used to change the suggestions text style
   final TextStyle suggestionTextStyle;
+  /// Can be used to change suggestions list background color
   final Color? suggestionBackgroundColor;
-  final Widget Function(String data)? suggestionBuilder; 
+  /// Can be used to create custom suggestion item widget
+  final Widget Function(String data)? suggestionBuilder;
+  /// Instead of using the default suggestion tap action that fills the textfield, you can set your own custom action for it
+  final Function(String data)? onSuggestionTap;
+  /// Can be used to set the debounce time for async data fetch
+  final Duration debounceDuration;
 
   const EasySearchBar({
     Key? key,
@@ -73,20 +95,20 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.searchHintStyle,
     this.searchTextStyle = const TextStyle(),
     this.suggestions,
+    this.onSuggestionTap,
+    this.searchBackIconTheme,
     this.asyncSuggestions,
     this.searchCursorColor,
     this.searchHintText = '',
+    this.suggestionLoaderBuilder,
     this.suggestionsElevation = 5,
     this.backgroundColor,
     this.foregroundColor,
     this.elevation,
-    this.toolbarHeight = 56,
-    this.centerTitle = false,
-    this.cursorColor,
+    this.appBarHeight = 56,
     this.isFloating = false,
     this.titleTextStyle,
     this.iconTheme,
-    this.searchBackIconTheme,
     this.suggestionTextStyle = const TextStyle(),
     this.suggestionBackgroundColor,
     this.animationDuration = const Duration(milliseconds: 450),
@@ -133,25 +155,47 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.0, 0.55, curve: Curves.easeIn),
-      ),
+      )
     );
     _textfieldOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.45, 1, curve: Curves.easeIn),
-      ),
+      )
     );
     _searchController.addListener(() async {
       if (_focusNode.hasFocus) {
         widget.onSearch(_searchController.text);
         if (widget.suggestions != null) {
+          openOverlay();
           updateSyncSuggestions(_searchController.text);
         }
         else if (widget.asyncSuggestions != null) {
+          openOverlay();
           updateAsyncSuggestions(_searchController.text);
         }
       }
     });
+  }
+
+  Widget? _suggestionLoaderBuilder() {
+    Widget? child;
+
+    if(widget.suggestionLoaderBuilder != null) {
+      child = widget.suggestionLoaderBuilder!();
+    }
+    else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      child = const CupertinoActivityIndicator();
+    }
+    else {
+      child = const CircularProgressIndicator();
+    }
+
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: child
+    );
   }
 
   void openOverlay() {
@@ -176,6 +220,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
               margin: const EdgeInsets.all(5),
               child: FilterableList(
                 loading: _isLoading,
+                loader: _suggestionLoaderBuilder(),
                 items: _suggestions,
                 suggestionBuilder: widget.suggestionBuilder,
                 elevation: widget.suggestionsElevation,
@@ -188,6 +233,9 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                       offset: value.length
                     )
                   );
+                  if (widget.onSuggestionTap != null) {
+                    widget.onSuggestionTap!(value);
+                  }
                   widget.onSearch(value);
                   closeOverlay();
                 }
@@ -206,12 +254,12 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
   void closeOverlay() {
     if (_hasOpenedOverlay) {
       _overlayEntry!.remove();
+      _overlayEntry = null;
       setState(() => _hasOpenedOverlay = false );
     }
   }
 
   void updateSyncSuggestions(String input) {
-    openOverlay();
     _suggestions = widget.suggestions!.where((element) {
       return element.toLowerCase().contains(input.toLowerCase());
     }).toList();
@@ -219,7 +267,6 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
   }
 
   Future<void> updateAsyncSuggestions(String input) async {
-    openOverlay();
     if (_debounce != null && _debounce!.isActive) {
       _debounce!.cancel();
     }
@@ -265,14 +312,14 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
 
     Color cursorColor = widget.searchCursorColor ?? theme.primaryColor;
 
-    IconThemeData searchIconThemeData = widget.searchBackIconTheme ?? IconThemeData(
-      size: 24,
-      color: Theme.of(context).primaryColor
-    );
-
     TextStyle searchHintStyle = widget.searchHintStyle ?? theme.inputDecorationTheme.hintStyle ?? const TextStyle(
       color: Colors.grey,
       fontStyle: FontStyle.italic
+    );
+
+    IconThemeData searchIconTheme = widget.searchBackIconTheme ?? IconThemeData(
+      size: 24,
+      color: Theme.of(context).primaryColor
     );
 
     return CompositedTransformTarget(
@@ -289,7 +336,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                 child: Stack(
                   children: [
                     Container(
-                      height: widget.toolbarHeight,
+                      height: widget.appBarHeight,
                       width: double.infinity,
                       padding: const EdgeInsets.only(
                         top: 10,
@@ -308,18 +355,19 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                               data: iconTheme,
                               child: IconButton(
                                 icon: const Icon(Icons.menu),
-                                iconSize: iconTheme.size ?? 24,
                                 onPressed: () => scaffold!.openDrawer(),
-                                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-                              ),
+                                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip
+                              )
                             ),
                             replacement: Visibility(
                               visible: canPop,
-                              child: IconButton(
-                                icon: const Icon(Icons.arrow_back_outlined),
-                                iconSize: iconTheme.size ?? 24,
-                                onPressed: () => Navigator.pop(context),
-                                tooltip: MaterialLocalizations.of(context).backButtonTooltip
+                              child: IconTheme(
+                                data: iconTheme,
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back_outlined),
+                                  onPressed: () => Navigator.pop(context),
+                                  tooltip: MaterialLocalizations.of(context).backButtonTooltip
+                                ),
                               ),
                               replacement: const SizedBox()
                             )
@@ -332,7 +380,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                 softWrap: false,
                                 overflow: TextOverflow.ellipsis,
                                 child: widget.title,
-                              ),
+                              )
                             )
                           ),
                           ...List.generate(widget.actions.length + 1, (index) {
@@ -346,8 +394,8 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                     _controller.forward();
                                     _focusNode.requestFocus();
                                   },
-                                  tooltip: MaterialLocalizations.of(context).searchFieldLabel,
-                                ),
+                                  tooltip: MaterialLocalizations.of(context).searchFieldLabel
+                                )
                               );
                             }
                 
@@ -371,7 +419,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30),
-                                topLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30),
+                                topLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30)
                               ),
                               color: searchColor
                             ),
@@ -380,8 +428,8 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                               child: TextField(
                                 onSubmitted: (value) {
                                   widget.onSearch(_searchController.text);
-                                  closeOverlay();
                                   _focusNode.unfocus();
+                                  closeOverlay();
                                 },
                                 maxLines: 1,
                                 controller: _searchController,
@@ -400,7 +448,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                   hintStyle: searchHintStyle,
                                   border: InputBorder.none,
                                   prefixIcon: IconTheme(
-                                    data: searchIconThemeData,
+                                    data: searchIconTheme,
                                     child: IconButton(
                                       icon: const Icon(
                                         Icons.arrow_back_outlined
@@ -409,6 +457,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                         _controller.reverse();
                                         _searchController.clear();
                                         widget.onSearch(_searchController.text);
+                                        _focusNode.unfocus();
                                         closeOverlay();
                                       }
                                     )
