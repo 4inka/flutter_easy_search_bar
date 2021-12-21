@@ -135,13 +135,13 @@ class _MyHomePageState extends State<MyHomePage> {
 | searchBackIconTheme | `IconThemeData` | :x: | Can be used to set custom icon theme for the search textfield back button |  |
 | suggestions | `List<String>` | :x: | Can be used to create a suggestions list |  |
 | asyncSuggestions | `Future<List<String>> Function(String value)` | :x: | Can be used to set async suggestions list |  |
-| suggestionsElevation | `double` | :x: | Can be used to change suggestion list elevation |  |
+| suggestionsElevation | `double` | :x: | Can be used to change suggestion list elevation | 5 |
 | suggestionLoaderBuilder | `Widget Function()` | :x: | A function that can be used to create a widget to display a custom suggestions loader |  |
 | suggestionTextStyle | `TextStyle` | :x: | Can be used to change the suggestions text style |  |
 | suggestionBackgroundColor | `Color` | :x: | Can be used to change suggestions list background color |  |
 | suggestionBuilder | `Widget Function(String data)` | :x: | Can be used to create custom suggestion item widget |  |
 | onSuggestionTap | `Function(String data)` | :x: | Instead of using the default suggestion tap action that fills the textfield, you can set your own custom action for it |  |
-| debounceDuration | `Duration` | :x: | Can be used to set the debounce time for async data fetch |  |
+| debounceDuration | `Duration` | :x: | Can be used to set the debounce time for async data fetch | Duration(milliseconds: 400) |
 
 ## Issues & Suggestions
 If you encounter any issue you or want to leave a suggestion you can do it by filling an [issue](https://github.com/4inka/flutter_easy_search_bar/issues).
