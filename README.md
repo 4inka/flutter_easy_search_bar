@@ -5,8 +5,8 @@
 A Flutter plugin to help you handle search inside your application. Can be used inside appBar or inside your application body depending on your necessities.
 
 ## Preview
-![Preview](https://raw.githubusercontent.com/4inka/flutter_easy_search_bar/main/preview/preview.gif)
-![Preview](https://raw.githubusercontent.com/4inka/flutter_easy_search_bar/main/preview/preview2.gif)
+![Default AppBar Preview](https://raw.githubusercontent.com/4inka/flutter_easy_search_bar/main/preview/preview.gif)
+![Floating AppBar Preview](https://raw.githubusercontent.com/4inka/flutter_easy_search_bar/main/preview/preview2.gif)
 
 ## Installation
 
@@ -112,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 ```
 
-*Note:* If you want to create a FloatingAppBar and want the body content to go behing the AppBar you need to set `extendBodyBehindAppBar` Scaffold property to true. And it's also recommended to wrap your Scaffold inside a SafeArea.
+**Note:** If you want to create a FloatingAppBar and want the body content to go behing the AppBar you need to set `extendBodyBehindAppBar` Scaffold property to true. And it's also recommended to wrap your Scaffold inside a SafeArea.
 
 ## API
 | Attribute | Type | Required | Description | Default value |
