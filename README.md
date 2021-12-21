@@ -38,21 +38,12 @@ Scaffold(
 ```
 
 And this is what it is supposed to look like now:
+
 ``` dart
 Scaffold(
   appBar: EasySearchBar(
     title: Text('Example'),
-    onSearch: (value) => setState(() => searchValue = value),
-    searchHintText: 'Hint text',
-    actions: [
-      IconButton(
-        icon: const Icon(
-          Icons.person,
-        ),
-        onPressed: () {}
-      )
-    ],
-    asyncSuggestions: (value) async => await _fetchSuggestions(value)
+    onSearch: (value) => setState(() => searchValue = value)
   )
 )
 ```
