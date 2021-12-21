@@ -27,134 +27,472 @@
 
 library easy_search_bar;
 
+import 'dart:async';
+
+import 'package:easy_search_bar/widgets/filterable_list.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class EasySearchBar extends StatefulWidget {
-  /// The title to be displayed inside appBar
-  final String title;
+class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
+  /// The title to be displayed inside AppBar
+  final Widget title;
   /// Returns the current search value
   /// When search is closed, this method returns an empty value to clear the current search
   final Function(String) onSearch;
-  /// Executes extra actions when search is closed
-  final Function? onClose;
-  /// Centers the appBar title
-  final bool centerTitle;
-  /// Duration for the appBar search show and hide
+  /// Extra custom actions that can be displayed inside AppBar
+  final List<Widget> actions;
+  /// Can be used to change AppBar background color
+  final Color? backgroundColor;
+  /// Can be used to change AppBar foreground color
+  final Color? foregroundColor;
+  /// Can be used to change AppBar elevation
+  final double? elevation;
+  /// Can be used to set custom icon theme for AppBar icons
+  final IconThemeData? iconTheme;
+  /// Can be used to change AppBar height
+  final double appBarHeight;
+  /// Can be used to set a duration for the AppBar search show and hide animation
   final Duration animationDuration;
-  /// Sets custom input decoration for the search TextField
-  final InputDecoration inputDecoration;
-  /// Sets custom style for the search TextField search text
-  final TextStyle inputTextStyle;
-  /// Sets custom title style
-  final TextStyle titleStyle;
-  /// Sets custom cursor color
-  final Color? cursorColor;
+  /// Can be used to determine if it will be a normal or floating AppBar
+  final bool isFloating;
+  /// Can be used to set the AppBar title style
+  final TextStyle? titleTextStyle;
+  /// Can be used to set search textfield cursor color
+  final Color? searchCursorColor;
+  /// Can be used to set search textfield hint text
+  final String searchHintText;
+  /// Can be used to set search textfield hint style
+  final TextStyle? searchHintStyle;
+  /// Can be used to set search textfield text style
+  final TextStyle searchTextStyle;
+  /// Can be used to set custom icon theme for the search textfield back button
+  final IconThemeData? searchBackIconTheme;
+  /// Can be used to create a suggestions list
+  final List<String>? suggestions;
+  /// Can be used to set async suggestions list
+  final Future<List<String>> Function(String value)? asyncSuggestions;
+  /// Can be used to change suggestion list elevation
+  final double suggestionsElevation;
+  /// A function that can be used to create a widget to display a custom suggestions loader
+  final Widget Function()? suggestionLoaderBuilder;
+  /// Can be used to change the suggestions text style
+  final TextStyle suggestionTextStyle;
+  /// Can be used to change suggestions list background color
+  final Color? suggestionBackgroundColor;
+  /// Can be used to create custom suggestion item widget
+  final Widget Function(String data)? suggestionBuilder;
+  /// Instead of using the default suggestion tap action that fills the textfield, you can set your own custom action for it
+  final Function(String data)? onSuggestionTap;
+  /// Can be used to set the debounce time for async data fetch
+  final Duration debounceDuration;
 
-  /// Creates a widget that can be used to manage search inside your application
-  EasySearchBar({
+  const EasySearchBar({
+    Key? key,
     required this.title,
     required this.onSearch,
-    this.onClose,
-    this.centerTitle = false,
-    this.animationDuration = const Duration(milliseconds: 350),
-    this.inputDecoration = const InputDecoration(
-      border: InputBorder.none
-    ),
-    this.inputTextStyle = const TextStyle(
-      color: Colors.white,
-      fontStyle: FontStyle.italic
-    ),
-    this.titleStyle = const TextStyle(
-      color: Colors.white
-    ),
-    this.cursorColor
-  });
+    this.suggestionBuilder,
+    this.actions = const [],
+    this.searchHintStyle,
+    this.searchTextStyle = const TextStyle(),
+    this.suggestions,
+    this.onSuggestionTap,
+    this.searchBackIconTheme,
+    this.asyncSuggestions,
+    this.searchCursorColor,
+    this.searchHintText = '',
+    this.suggestionLoaderBuilder,
+    this.suggestionsElevation = 5,
+    this.backgroundColor,
+    this.foregroundColor,
+    this.elevation,
+    this.appBarHeight = 56,
+    this.isFloating = false,
+    this.titleTextStyle,
+    this.iconTheme,
+    this.suggestionTextStyle = const TextStyle(),
+    this.suggestionBackgroundColor,
+    this.animationDuration = const Duration(milliseconds: 450),
+    this.debounceDuration = const Duration(milliseconds: 400)
+  }) : super(key: key);
 
   @override
-  _EasySearchBarState createState() => _EasySearchBarState();
+  State<EasySearchBar> createState() => _EasySearchBarState();
+
+  @override
+  Size get preferredSize => Size.fromHeight(appBarHeight + (isFloating ? 5 : 0));
 }
 
-class _EasySearchBarState extends State<EasySearchBar> with SingleTickerProviderStateMixin {
-  bool _searchOpened = false;
-  late Widget _animatedIcon;
-  late TextField _textField;
-  final TextEditingController _textEditingController = TextEditingController();
+class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateMixin {
+  final LayerLink _layerLink = LayerLink();
+  bool _hasOpenedOverlay = false;
+  bool _isLoading = false;
+  OverlayEntry? _overlayEntry;
+  List<String> _suggestions = [];
+  Timer? _debounce;
+  String _previousAsyncSearchText = '';
+  final FocusNode _focusNode = FocusNode();
+
+  late AnimationController _controller;
+  late Animation _containerSizeAnimation;
+  late Animation _containerBorderRadiusAnimation;
+  late Animation _textfieldOpacityAnimation;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _animatedIcon = Icon(
-      Icons.search,
-      key: ValueKey('search')
+    _controller = AnimationController(
+      vsync:  this ,
+      duration: widget.animationDuration
+    );
+    _containerSizeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.55, curve: Curves.easeIn),
+      ),
+    );
+    _containerBorderRadiusAnimation = Tween<double>(begin: 1, end: 0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.55, curve: Curves.easeIn),
+      )
+    );
+    _textfieldOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.45, 1, curve: Curves.easeIn),
+      )
+    );
+    _searchController.addListener(() async {
+      if (_focusNode.hasFocus) {
+        widget.onSearch(_searchController.text);
+        if (widget.suggestions != null) {
+          openOverlay();
+          updateSyncSuggestions(_searchController.text);
+        }
+        else if (widget.asyncSuggestions != null) {
+          openOverlay();
+          updateAsyncSuggestions(_searchController.text);
+        }
+      }
+    });
+  }
+
+  Widget? _suggestionLoaderBuilder() {
+    Widget? child;
+
+    if(widget.suggestionLoaderBuilder != null) {
+      child = widget.suggestionLoaderBuilder!();
+    }
+    else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      child = const CupertinoActivityIndicator();
+    }
+    else {
+      child = const CircularProgressIndicator();
+    }
+
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: child
     );
   }
 
-  void _onButtonPressed() {
-    setState(() {
-      _searchOpened = !_searchOpened;
-    });
-    if (_searchOpened) {
-      setState(() {
-        _animatedIcon = Icon(
-          Icons.close,
-          key: ValueKey('close_icon')
-        );
-      });
+  void openOverlay() {
+    if (_overlayEntry == null && (widget.suggestions != null || widget.asyncSuggestions != null)) {
+      RenderBox renderBox = context.findRenderObject() as RenderBox;
+      Size size = renderBox.size;
+      Offset offset = renderBox.localToGlobal(Offset.zero);
+
+      _overlayEntry ??= OverlayEntry(
+        builder: (context) => Positioned(
+          left: offset.dx,
+          top: offset.dy + size.height,
+          width: size.width,
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: Offset(0.0, size.height),
+            child: Container(
+              constraints: const BoxConstraints(
+                maxHeight: 150
+              ),
+              margin: const EdgeInsets.all(5),
+              child: FilterableList(
+                loading: _isLoading,
+                loader: _suggestionLoaderBuilder(),
+                items: _suggestions,
+                suggestionBuilder: widget.suggestionBuilder,
+                elevation: widget.suggestionsElevation,
+                suggestionTextStyle: widget.suggestionTextStyle,
+                suggestionBackgroundColor: widget.suggestionBackgroundColor,
+                onItemTapped: (value) {
+                  _searchController.value = TextEditingValue(
+                    text: value,
+                    selection: TextSelection.collapsed(
+                      offset: value.length
+                    )
+                  );
+                  if (widget.onSuggestionTap != null) {
+                    widget.onSuggestionTap!(value);
+                  }
+                  widget.onSearch(value);
+                  closeOverlay();
+                }
+              )
+            )
+          )
+        )
+      );
     }
-    else {
-      setState(() {
-        _animatedIcon = Icon(Icons.search, key: ValueKey('search_icon'));
-        _textEditingController.text = '';
-        widget.onSearch('');
-        if (widget.onClose != null) widget.onClose!();
-      });
+    if (!_hasOpenedOverlay && (widget.suggestions != null || widget.asyncSuggestions != null)) {
+      Overlay.of(context)!.insert(_overlayEntry!);
+      setState(() => _hasOpenedOverlay = true );
+    }
+  }
+
+  void closeOverlay() {
+    if (_hasOpenedOverlay) {
+      _overlayEntry!.remove();
+      _overlayEntry = null;
+      setState(() => _hasOpenedOverlay = false );
+    }
+  }
+
+  void updateSyncSuggestions(String input) {
+    _suggestions = widget.suggestions!.where((element) {
+      return element.toLowerCase().contains(input.toLowerCase());
+    }).toList();
+    rebuildOverlay();
+  }
+
+  Future<void> updateAsyncSuggestions(String input) async {
+    if (_debounce != null && _debounce!.isActive) {
+      _debounce!.cancel();
+    }
+    setState(() => _isLoading = true);
+    _debounce = Timer(widget.debounceDuration, () async {
+      if (_previousAsyncSearchText != input || _previousAsyncSearchText.isEmpty || input.isEmpty) {
+        _suggestions = await widget.asyncSuggestions!(input);
+        setState(() {
+          _isLoading = false;
+          _previousAsyncSearchText = input;
+        });
+        rebuildOverlay();
+      }
+    });
+  }
+
+  void rebuildOverlay() {
+    if(_overlayEntry != null) {
+      _overlayEntry!.markNeedsBuild();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: AnimatedCrossFade(
-            duration: widget.animationDuration,
-            reverseDuration: widget.animationDuration,
-            firstChild: Align(
-              alignment: widget.centerTitle ? Alignment.center : Alignment.centerLeft,
-              child: Text(
-                widget.title,
-                textAlign: TextAlign.end,
-                style: widget.titleStyle
-              )
-            ),
-            secondChild: TextField(
-              controller: _textEditingController,
-              cursorColor: widget.cursorColor ?? Colors.white,
-              autofocus: true,
-              decoration: widget.inputDecoration,
-              style: widget.inputTextStyle,
-              onChanged:  (value) => widget.onSearch(value)
-            ),
-            crossFadeState: _searchOpened ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-          )
-        ),
-        IconButton(
-          icon: AnimatedSwitcher(
-            duration: widget.animationDuration,
-            child: _animatedIcon,
-            transitionBuilder: (child, animation) {
-              return ScaleTransition(
-                scale: animation,
-                child: child
-              );
-            }
-          ),
-          onPressed: () => _onButtonPressed()
-        )
-      ]
+    final ThemeData theme = Theme.of(context);
+    final AppBarTheme appBarTheme = AppBarTheme.of(context);
+    final ScaffoldState? scaffold = Scaffold.maybeOf(context);
+    final ModalRoute<dynamic>? parentRoute = ModalRoute.of(context);
+
+    final bool canPop = parentRoute?.canPop ?? false;
+
+    Color? backgroundColor = widget.backgroundColor ?? appBarTheme.backgroundColor ?? theme.primaryColor;
+
+    Color? foregroundColor = widget.foregroundColor ?? appBarTheme.foregroundColor;
+
+    IconThemeData iconTheme = widget.iconTheme ?? appBarTheme.iconTheme ?? theme.iconTheme.copyWith(color: foregroundColor);
+
+    TextStyle? titleTextStyle = widget.titleTextStyle ?? appBarTheme.titleTextStyle ?? theme.textTheme.headline6!.copyWith(color: foregroundColor);
+
+    double? elevation = widget.elevation ?? appBarTheme.elevation ?? 5;
+
+    Color searchColor = theme.brightness == Brightness.light ? Colors.white : Colors.black;
+
+    Color cursorColor = widget.searchCursorColor ?? theme.primaryColor;
+
+    TextStyle searchHintStyle = widget.searchHintStyle ?? theme.inputDecorationTheme.hintStyle ?? const TextStyle(
+      color: Colors.grey,
+      fontStyle: FontStyle.italic
     );
+
+    IconThemeData searchIconTheme = widget.searchBackIconTheme ?? IconThemeData(
+      size: 24,
+      color: Theme.of(context).primaryColor
+    );
+
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: SafeArea(
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Container(
+              margin: EdgeInsets.only(
+                top: widget.isFloating ? 5 : 0,
+                left: widget.isFloating ? 5 : 0,
+                right: widget.isFloating ? 5 : 0
+              ),
+              height: 66,
+              child: Material(
+                elevation: elevation,
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(widget.isFloating ? 5 : 0),
+                child: Stack(
+                  children: [
+                    Container(
+                      height: widget.appBarHeight + (widget.isFloating ? 5 : 0),
+                      width: double.infinity,
+                      padding: const EdgeInsets.only(
+                        top: 10,
+                        left: 5,
+                        right: 3,
+                        bottom: 10
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Visibility(
+                            visible: scaffold?.hasDrawer ?? false,
+                            child: IconTheme(
+                              data: iconTheme,
+                              child: IconButton(
+                                icon: const Icon(Icons.menu),
+                                onPressed: () => scaffold!.openDrawer(),
+                                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip
+                              )
+                            ),
+                            replacement: Visibility(
+                              visible: canPop,
+                              child: IconTheme(
+                                data: iconTheme,
+                                child: IconButton(
+                                  icon: const Icon(Icons.arrow_back_outlined),
+                                  onPressed: () => Navigator.pop(context),
+                                  tooltip: MaterialLocalizations.of(context).backButtonTooltip
+                                ),
+                              ),
+                              replacement: const SizedBox()
+                            )
+                          ),
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 20),
+                              child: DefaultTextStyle(
+                                style: titleTextStyle,
+                                softWrap: false,
+                                overflow: TextOverflow.ellipsis,
+                                child: widget.title,
+                              )
+                            )
+                          ),
+                          ...List.generate(widget.actions.length + 1, (index) {
+                            if (widget.actions.length == index) {
+                              return IconTheme(
+                                data: iconTheme,
+                                child: IconButton(
+                                  icon: const Icon(Icons.search),
+                                  iconSize: iconTheme.size ?? 24,
+                                  onPressed: () {
+                                    _controller.forward();
+                                    _focusNode.requestFocus();
+                                  },
+                                  tooltip: MaterialLocalizations.of(context).searchFieldLabel
+                                )
+                              );
+                            }
+                
+                            return IconTheme(
+                              data: iconTheme,
+                              child: widget.actions[index]
+                            );
+                          })
+                        ]
+                      )
+                    ),
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) {
+                          return Container(
+                            alignment: Alignment.center,
+                            height: constraints.maxHeight - (widget.isFloating ? 5 : 0),
+                            width: _containerSizeAnimation.value * constraints.maxWidth - (_containerSizeAnimation.value * (widget.isFloating ? 10 : 0)),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30 + (widget.isFloating ? 5 : 0)),
+                                topLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30 + (widget.isFloating ? 5 : 0)),
+                                topRight: Radius.circular(widget.isFloating ? 5 : 0),
+                                bottomRight: Radius.circular(widget.isFloating ? 5 : 0)
+                              ),
+                              color: searchColor
+                            ),
+                            child: Opacity(
+                              opacity: _textfieldOpacityAnimation.value,
+                              child: TextField(
+                                onSubmitted: (value) {
+                                  widget.onSearch(_searchController.text);
+                                  _focusNode.unfocus();
+                                  closeOverlay();
+                                },
+                                maxLines: 1,
+                                controller: _searchController,
+                                textInputAction: TextInputAction.search,
+                                cursorColor: cursorColor,
+                                focusNode: _focusNode,
+                                textAlignVertical: TextAlignVertical.center,
+                                style: widget.searchTextStyle,
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.only(
+                                    left: 20,
+                                    right: 10
+                                  ),
+                                  hintText: widget.searchHintText,
+                                  hintMaxLines: 1,
+                                  hintStyle: searchHintStyle,
+                                  border: InputBorder.none,
+                                  prefixIcon: IconTheme(
+                                    data: searchIconTheme,
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.arrow_back_outlined
+                                      ),
+                                      onPressed: () {
+                                        _controller.reverse();
+                                        _searchController.clear();
+                                        widget.onSearch(_searchController.text);
+                                        _focusNode.unfocus();
+                                        closeOverlay();
+                                      }
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          );
+                        }
+                      )
+                    )
+                  ]
+                )
+              )
+            );
+          }
+        )
+      )
+    );
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 }
