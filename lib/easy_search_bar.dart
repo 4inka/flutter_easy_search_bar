@@ -37,6 +37,7 @@ import 'package:flutter/material.dart';
 class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   /// The title to be displayed inside AppBar
   final Widget title;
+  /// Returns the current search value
   /// When search is closed, this method returns an empty value to clear the current search
   final Function(String) onSearch;
   /// Extra custom actions that can be displayed inside AppBar
@@ -47,11 +48,11 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final Color? foregroundColor;
   /// Can be used to change AppBar elevation
   final double? elevation;
-  /// Can be used to set custom icon theme
+  /// Can be used to set custom icon theme for AppBar icons
   final IconThemeData? iconTheme;
   /// Can be used to change AppBar height
   final double appBarHeight;
-  /// Duration for the appBar search show and hide
+  /// Can be used to set a duration for the AppBar search show and hide animation
   final Duration animationDuration;
   /// Can be used to determine if it will be a normal or floating AppBar
   final bool isFloating;
@@ -74,7 +75,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   /// Can be used to change suggestion list elevation
   final double suggestionsElevation;
   /// A function that can be used to create a widget to display a custom suggestions loader
-  final Widget? Function()? suggestionLoaderBuilder;
+  final Widget Function()? suggestionLoaderBuilder;
   /// Can be used to change the suggestions text style
   final TextStyle suggestionTextStyle;
   /// Can be used to change suggestions list background color
