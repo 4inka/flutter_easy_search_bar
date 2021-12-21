@@ -1,4 +1,4 @@
-## 2.0.0 - 16-12-2021
+## 2.0.0 - 21-12-2021
 
 ### Added
 * Added suggestions functionality
