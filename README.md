@@ -118,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
 | Attribute | Type | Required | Description | Default value |
 |:---|:---|:---:|:---|:---|
 | title | `Widget` | :heavy_check_mark: | The title to be displayed inside AppBar |  |
-| onSearch | `Function(String)` | :heavy_check_mark: | Returns the current search value&nbsp;When search is closed, this method returns an empty value to clear the current search |  |
+| onSearch | `Function(String)` | :heavy_check_mark: | Returns the current search value.When search is closed, this method returns an empty value to clear the current search |  |
 | actions | `List<Widget>` | :x: | Extra custom actions that can be displayed inside AppBar |  |
 | backgroundColor | `Color` | :x: | Can be used to change AppBar background color |  |
 | foregroundColor | `Color` | :x: | Can be used to change AppBar foreground color |  |
