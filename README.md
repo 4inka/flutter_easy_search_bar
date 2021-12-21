@@ -6,6 +6,7 @@ A Flutter plugin to help you handle search inside your application. Can be used 
 
 ## Preview
 ![Preview](https://raw.githubusercontent.com/4inka/flutter_easy_search_bar/main/preview/preview.gif)
+![Preview](https://raw.githubusercontent.com/4inka/flutter_easy_search_bar/main/preview/preview2.gif)
 
 ## Installation
 
@@ -30,9 +31,6 @@ Scaffold(
       title: 'Example',
       onSearch: (value) => setState(() => searchValue = value)
     )
-  ),
-  body: Center(
-    child: Text('Value: $searchValue')
   )
 )
 ```
@@ -48,8 +46,9 @@ Scaffold(
 )
 ```
 
-## Basic example
-You can create a simple searchbar widget with the following example:
+## Basic example with suggestions
+
+You can create a simple searchbar example widget with suggestions with the following example:
 
 ``` dart
 import 'package:easy_search_bar/easy_search_bar.dart';
@@ -70,14 +69,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String searchValue = '';
   final List<String> _suggestions = ['Afeganistan', 'Albania', 'Algeria', 'Australia', 'Brazil', 'German', 'Madagascar', 'Mozambique', 'Portugal', 'Zambia'];
 
-  Future<List<String>> _fetchSuggestions(String searchValue) async {
-    await Future.delayed(const Duration(milliseconds: 750));
-
-    return _suggestions.where((element) {
-      return element.toLowerCase().contains(searchValue.toLowerCase());
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     return  MaterialApp(
@@ -89,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: EasySearchBar(
           title: const Text('Example'),
           onSearch: (value) => setState(() => searchValue = value),
-          asyncSuggestions: (value) async => await _fetchSuggestions(value)
+          suggestions: _suggestions
         ),
         drawer: Drawer(
           child: ListView(
@@ -115,69 +106,6 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Center(
           child: Text('Value: $searchValue')
         )
-      )
-    );
-  }
-}
-```
-
-## Floating AppBar example
-
-![Preview](https://raw.githubusercontent.com/4inka/flutter_easy_search_bar/main/preview/preview2.gif)
-
-You can also create a floating AppBar widget with the following example:
-
-``` dart
-import 'package:easy_search_bar/easy_search_bar.dart';
-import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyHomePage());
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  String searchValue = '';
-  final List<String> _suggestions = ['Afeganistan', 'Albania', 'Algeria', 'Australia', 'Brazil', 'German', 'Madagascar', 'Mozambique', 'Portugal', 'Zambia'];
-
-  Future<List<String>> _fetchSuggestions(String searchValue) async {
-    await Future.delayed(const Duration(milliseconds: 750));
-
-    return _suggestions.where((element) {
-      return element.toLowerCase().contains(searchValue.toLowerCase());
-    }).toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return  MaterialApp(
-      title: 'Example',
-      theme: ThemeData(
-        primarySwatch: Colors.orange
-      ),
-      home: SafeArea(
-        child: Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: EasySearchBar(
-            title: const Text('Example'),
-            isFloating: true,
-            onSearch: (value) => setState(() => searchValue = value),
-            asyncSuggestions: (value) async => await _fetchSuggestions(value)
-          ),
-          body: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.grey,
-            alignment: Alignment.center,
-            child: Text('Value: $searchValue')
-          )
-        ),
       )
     );
   }
