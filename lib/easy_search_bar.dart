@@ -363,20 +363,26 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                             visible: scaffold?.hasDrawer ?? false,
                             child: IconTheme(
                               data: iconTheme,
-                              child: IconButton(
-                                icon: const Icon(Icons.menu),
-                                onPressed: () => scaffold!.openDrawer(),
-                                tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: IconButton(
+                                  icon: const Icon(Icons.menu),
+                                  onPressed: () => scaffold!.openDrawer(),
+                                  tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip
+                                ),
                               )
                             ),
                             replacement: Visibility(
                               visible: canPop,
                               child: IconTheme(
                                 data: iconTheme,
-                                child: IconButton(
-                                  icon: const Icon(Icons.arrow_back_outlined),
-                                  onPressed: () => Navigator.pop(context),
-                                  tooltip: MaterialLocalizations.of(context).backButtonTooltip
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.arrow_back_outlined),
+                                    onPressed: () => Navigator.pop(context),
+                                    tooltip: MaterialLocalizations.of(context).backButtonTooltip
+                                  ),
                                 ),
                               ),
                               replacement: const SizedBox()
@@ -384,7 +390,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                           ),
                           Expanded(
                             child: Container(
-                              margin: const EdgeInsets.only(left: 20),
+                              margin: const EdgeInsets.only(left: 10),
                               child: DefaultTextStyle(
                                 style: titleTextStyle,
                                 softWrap: false,

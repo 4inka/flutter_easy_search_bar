@@ -1,3 +1,8 @@
+## 2.1.1 - 25-12-2021
+
+### Fixed
+* Correcting padding for AppBar that don't have drawer
+
 ## 2.1.0 - 25-12-2021
 
 ### Added
