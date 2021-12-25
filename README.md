@@ -128,6 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
 | animationDuration | `Duration` | :x: | Can be used to set a duration for the AppBar search show and hide animation | Duration(milliseconds: 450) |
 | isFloating | `bool` | :x: | Can be used to determine if it will be a normal or floating AppBar | false |
 | titleTextStyle | `TextStyle` | :x: | Can be used to set the AppBar title style |  |
+| searchBackgroundColor | `Color` | :x: | Can be used to set the search input background color |  |
 | searchCursorColor | `Color` | :x: | Can be used to set search textfield cursor color |  |
 | searchHintText | `String` | :x: | Can be used to set search textfield hint text |  |
 | searchHintStyle | `TextStyle` | :x: | Can be used to set search textfield hint style |  |

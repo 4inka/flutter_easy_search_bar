@@ -58,6 +58,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final bool isFloating;
   /// Can be used to set the AppBar title style
   final TextStyle? titleTextStyle;
+  /// Can be used to set the search input background color
+  final Color? searchBackgroundColor;
   /// Can be used to set search textfield cursor color
   final Color? searchCursorColor;
   /// Can be used to set search textfield hint text
@@ -101,6 +103,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.asyncSuggestions,
     this.searchCursorColor,
     this.searchHintText = '',
+    this.searchBackgroundColor,
     this.suggestionLoaderBuilder,
     this.suggestionsElevation = 5,
     this.backgroundColor,
@@ -303,13 +306,13 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
 
     Color? foregroundColor = widget.foregroundColor ?? appBarTheme.foregroundColor;
 
+    Color? searchBackgroundColor = widget.searchBackgroundColor ?? scaffold!.widget.backgroundColor ?? theme.inputDecorationTheme.fillColor ?? theme.scaffoldBackgroundColor;// ?? scaffold.;
+
     IconThemeData iconTheme = widget.iconTheme ?? appBarTheme.iconTheme ?? theme.iconTheme.copyWith(color: foregroundColor);
 
     TextStyle? titleTextStyle = widget.titleTextStyle ?? appBarTheme.titleTextStyle ?? theme.textTheme.headline6!.copyWith(color: foregroundColor);
 
     double? elevation = widget.elevation ?? appBarTheme.elevation ?? 5;
-
-    Color searchColor = theme.brightness == Brightness.light ? Colors.white : Colors.black;
 
     Color cursorColor = widget.searchCursorColor ?? theme.primaryColor;
 
@@ -431,7 +434,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                 topRight: Radius.circular(widget.isFloating ? 5 : 0),
                                 bottomRight: Radius.circular(widget.isFloating ? 5 : 0)
                               ),
-                              color: searchColor
+                              color: searchBackgroundColor
                             ),
                             child: Opacity(
                               opacity: _textfieldOpacityAnimation.value,
@@ -453,6 +456,8 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                     left: 20,
                                     right: 10
                                   ),
+                                  fillColor: searchBackgroundColor,
+                                  filled: true,
                                   hintText: widget.searchHintText,
                                   hintMaxLines: 1,
                                   hintStyle: searchHintStyle,
