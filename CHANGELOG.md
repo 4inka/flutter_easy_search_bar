@@ -1,3 +1,8 @@
+## 2.1.0 - 25-12-2021
+
+### Added
+* Decoration parameter for search input background color
+
 ## 2.0.0 - 21-12-2021
 
 ### Added
