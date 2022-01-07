@@ -306,7 +306,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
 
     Color? foregroundColor = widget.foregroundColor ?? appBarTheme.foregroundColor;
 
-    Color? searchBackgroundColor = widget.searchBackgroundColor ?? scaffold!.widget.backgroundColor ?? theme.inputDecorationTheme.fillColor ?? theme.scaffoldBackgroundColor;// ?? scaffold.;
+    Color? searchBackgroundColor = widget.searchBackgroundColor ?? scaffold!.widget.backgroundColor ?? theme.inputDecorationTheme.fillColor ?? theme.scaffoldBackgroundColor;
 
     IconThemeData iconTheme = widget.iconTheme ?? appBarTheme.iconTheme ?? theme.iconTheme.copyWith(color: foregroundColor);
 
