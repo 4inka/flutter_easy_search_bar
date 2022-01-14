@@ -15,7 +15,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 ``` yaml
 dependencies:
   ...
-  easy_search_bar: ^2.2.0
+  easy_search_bar: ^2.3.0
 ```
 
 ## Migrating from 1.x.x to 2.x.x
@@ -134,6 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
 | searchHintStyle | `TextStyle` | :x: | Can be used to set search textfield hint style |  |
 | searchTextStyle | `TextStyle` | :x: | Can be used to set search textfield text style |  |
 | searchBackIconTheme | `IconThemeData` | :x: | Can be used to set custom icon theme for the search textfield back button |  |
+| systemOverlayStyle | `SystemUiOverlayStyle` | :x: | Can be used to set SystemUiOverlayStyle to the AppBar |  |
 | suggestions | `List<String>` | :x: | Can be used to create a suggestions list |  |
 | asyncSuggestions | `Future<List<String>> Function(String value)` | :x: | Can be used to set async suggestions list |  |
 | suggestionsElevation | `double` | :x: | Can be used to change suggestion list elevation | 5 |
