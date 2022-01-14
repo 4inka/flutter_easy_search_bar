@@ -1,3 +1,8 @@
+## 2.3.0 - [12-01-2022]
+
+### Added
+* Added `systemOverlayStyle` param
+
 ## 2.2.0 - [07-01-2022]
 
 ### Changed
