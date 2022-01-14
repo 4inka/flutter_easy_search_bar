@@ -1,3 +1,8 @@
+## 2.3.1 - [14-01-2022]
+
+### Fixed
+* Fixed issue in which setting `SystemUiOverlayStyle` `statusBarColor` parameter to `Colors.transparent` wouldn't show the actual default color
+
 ## 2.3.0 - [14-01-2022]
 
 ### Added
