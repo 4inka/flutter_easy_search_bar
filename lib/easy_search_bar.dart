@@ -69,6 +69,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final TextStyle? searchHintStyle;
   /// Can be used to set search textfield text style
   final TextStyle searchTextStyle;
+  /// Can be used to set search textfield keyboard type
+  final TextInputType searchTextKeyboardType;
   /// Can be used to set custom icon theme for the search textfield back button
   final IconThemeData? searchBackIconTheme;
   /// Can be used to set SystemUiOverlayStyle to the AppBar
@@ -120,7 +122,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.suggestionTextStyle = const TextStyle(),
     this.suggestionBackgroundColor,
     this.animationDuration = const Duration(milliseconds: 450),
-    this.debounceDuration = const Duration(milliseconds: 400)
+    this.debounceDuration = const Duration(milliseconds: 400),
+    this.searchTextKeyboardType = TextInputType.text
   }) : super(key: key);
 
   @override
@@ -470,6 +473,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                         focusNode: _focusNode,
                                         textAlignVertical: TextAlignVertical.center,
                                         style: widget.searchTextStyle,
+                                        keyboardType: widget.searchTextKeyboardType,
                                         decoration: InputDecoration(
                                           contentPadding: const EdgeInsets.only(
                                             left: 20,
