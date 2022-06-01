@@ -133,6 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
 | searchHintText | `String` | :x: | Can be used to set search textfield hint text |  |
 | searchHintStyle | `TextStyle` | :x: | Can be used to set search textfield hint style |  |
 | searchTextStyle | `TextStyle` | :x: | Can be used to set search textfield text style |  |
+| searchTextKeyboardType | `KeyboardType` | :x: | Can be used to set search textfield keyboard type |  |
 | searchBackIconTheme | `IconThemeData` | :x: | Can be used to set custom icon theme for the search textfield back button |  |
 | systemOverlayStyle | `SystemUiOverlayStyle` | :x: | Can be used to set SystemUiOverlayStyle to the AppBar |  |
 | suggestions | `List<String>` | :x: | Can be used to create a suggestions list |  |
