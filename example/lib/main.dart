@@ -14,7 +14,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String searchValue = '';
-  final List<String> _suggestions = ['Afeganistan', 'Albania', 'Algeria', 'Australia', 'Brazil', 'German', 'Madagascar', 'Mozambique', 'Portugal', 'Zambia'];
+  final List<String> _suggestions = ['Afghanistan', 'Albania', 'Algeria', 'Australia', 'Brazil', 'German', 'Madagascar', 'Mozambique', 'Portugal', 'Zambia'];
 
   Future<List<String>> _fetchSuggestions(String searchValue) async {
     await Future.delayed(const Duration(milliseconds: 750));
@@ -29,7 +29,8 @@ class _MyHomePageState extends State<MyHomePage> {
     return  MaterialApp(
       title: 'Example',
       theme: ThemeData(
-        primarySwatch: Colors.orange
+        primarySwatch: Colors.orange,
+        //brightness: Brightness.dark
       ),
       home: Scaffold(
         appBar: EasySearchBar(
