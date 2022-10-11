@@ -1,3 +1,14 @@
+## 2.4.0 - [11-10-2022]
+
+### Added
+* 
+
+### Fixed
+* Fixed search input back arrow color
+
+### Changed
+* Changed default search input back arrow and cursor colors
+
 ## 2.3.1 - [14-01-2022]
 
 ### Fixed
