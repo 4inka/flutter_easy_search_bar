@@ -311,7 +311,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
 
     Color? backgroundColor = widget.backgroundColor ?? appBarTheme.backgroundColor ?? theme.primaryColor;
 
-    Color? foregroundColor = widget.foregroundColor ?? appBarTheme.foregroundColor ?? theme.appBarTheme.foregroundColor;
+    Color? foregroundColor = widget.foregroundColor ?? appBarTheme.foregroundColor;
 
     Color? searchBackgroundColor = widget.searchBackgroundColor ?? scaffold!.widget.backgroundColor ?? theme.inputDecorationTheme.fillColor ?? theme.scaffoldBackgroundColor;
 
@@ -321,18 +321,17 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
 
     double? elevation = widget.elevation ?? appBarTheme.elevation ?? 5;
 
+    Color cursorColor = widget.searchCursorColor ?? theme.primaryColor;
+
     TextStyle searchHintStyle = widget.searchHintStyle ?? theme.inputDecorationTheme.hintStyle ?? const TextStyle(
       color: Colors.grey,
       fontStyle: FontStyle.italic
     );
 
-    IconThemeData searchIconTheme = widget.searchBackIconTheme ?? iconTheme;
-    /*?? IconThemeData(
+    IconThemeData searchIconTheme = widget.searchBackIconTheme ?? IconThemeData(
       size: 24,
-      color: foregroundColor //Theme.of(context).primaryColor
-    );*/
-
-    Color cursorColor = widget.searchCursorColor ?? theme.textSelectionTheme.cursorColor ?? searchIconTheme.color ?? theme.primaryColor;
+      color: Theme.of(context).primaryColor
+    );
 
     SystemUiOverlayStyle systemOverlayStyle = widget.systemOverlayStyle ?? appBarTheme.systemOverlayStyle ?? (theme.brightness == Brightness.dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark);
 
