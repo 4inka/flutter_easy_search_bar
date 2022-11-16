@@ -426,6 +426,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                           onPressed: () {
                                             _controller.forward();
                                             _focusNode.requestFocus();
+                                            openOverlay();
                                           },
                                           tooltip: MaterialLocalizations.of(context).searchFieldLabel
                                         )
