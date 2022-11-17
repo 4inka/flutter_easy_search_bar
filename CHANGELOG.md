@@ -1,7 +1,7 @@
 ## 2.4.0 - [11-10-2022]
 
 ### Added
-* 
+* Adding `leading` and `openOverlayOSearch` parameters
 
 ### Fixed
 * Fixed search input back arrow color

@@ -41,6 +41,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   /// Returns the current search value
   /// When search is closed, this method returns an empty value to clear the current search
   final Function(String) onSearch;
+  /// Can be used to add leading icon to AppBar
+  final Widget? leading;
   /// Extra custom actions that can be displayed inside AppBar
   final List<Widget> actions;
   /// Can be used to change AppBar background color
@@ -57,21 +59,23 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final Duration animationDuration;
   /// Can be used to determine if it will be a normal or floating AppBar
   final bool isFloating;
+  /// Can be used to determine if the suggestions overlay will be opened when clicking search
+  final bool openOverlayOSearch;
   /// Can be used to set the AppBar title style
   final TextStyle? titleTextStyle;
   /// Can be used to set the search input background color
   final Color? searchBackgroundColor;
-  /// Can be used to set search textfield cursor color
+  /// Can be used to set search textField cursor color
   final Color? searchCursorColor;
-  /// Can be used to set search textfield hint text
+  /// Can be used to set search textField hint text
   final String searchHintText;
-  /// Can be used to set search textfield hint style
+  /// Can be used to set search textField hint style
   final TextStyle? searchHintStyle;
-  /// Can be used to set search textfield text style
+  /// Can be used to set search textField text style
   final TextStyle searchTextStyle;
-  /// Can be used to set search textfield keyboard type
+  /// Can be used to set search textField keyboard type
   final TextInputType searchTextKeyboardType;
-  /// Can be used to set custom icon theme for the search textfield back button
+  /// Can be used to set custom icon theme for the search textField back button
   final IconThemeData? searchBackIconTheme;
   /// Can be used to set SystemUiOverlayStyle to the AppBar
   final SystemUiOverlayStyle? systemOverlayStyle;
@@ -89,7 +93,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final Color? suggestionBackgroundColor;
   /// Can be used to create custom suggestion item widget
   final Widget Function(String data)? suggestionBuilder;
-  /// Instead of using the default suggestion tap action that fills the textfield, you can set your own custom action for it
+  /// Instead of using the default suggestion tap action that fills the textField, you can set your own custom action for it
   final Function(String data)? onSuggestionTap;
   /// Can be used to set the debounce time for async data fetch
   final Duration debounceDuration;
@@ -99,6 +103,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     required this.title,
     required this.onSearch,
     this.suggestionBuilder,
+    this.leading,
     this.actions = const [],
     this.searchHintStyle,
     this.searchTextStyle = const TextStyle(),
@@ -117,6 +122,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.elevation,
     this.appBarHeight = 56,
     this.isFloating = false,
+    this.openOverlayOSearch = false,
     this.titleTextStyle,
     this.iconTheme,
     this.suggestionTextStyle = const TextStyle(),
@@ -124,7 +130,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.animationDuration = const Duration(milliseconds: 450),
     this.debounceDuration = const Duration(milliseconds: 400),
     this.searchTextKeyboardType = TextInputType.text
-  }) : super(key: key);
+  }) : assert(elevation == null || elevation >= 0.0),
+        super(key: key);
 
   @override
   State<EasySearchBar> createState() => _EasySearchBarState();
@@ -146,7 +153,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
   late AnimationController _controller;
   late Animation _containerSizeAnimation;
   late Animation _containerBorderRadiusAnimation;
-  late Animation _textfieldOpacityAnimation;
+  late Animation _textFieldOpacityAnimation;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -168,7 +175,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
         curve: const Interval(0.0, 0.55, curve: Curves.easeIn),
       )
     );
-    _textfieldOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
+    _textFieldOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.45, 1, curve: Curves.easeIn),
@@ -309,6 +316,9 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
 
     final bool canPop = parentRoute?.canPop ?? false;
 
+    assert(widget.leading == null || !scaffold!.hasDrawer, 'Cannot use leading with drawer');
+    assert(widget.leading == null || !canPop, 'Cannot use leading when back button exists');
+
     Color? backgroundColor = widget.backgroundColor ?? appBarTheme.backgroundColor ?? theme.primaryColor;
 
     Color? foregroundColor = widget.foregroundColor ?? appBarTheme.foregroundColor;
@@ -376,14 +386,14 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Visibility(
-                                    visible: scaffold?.hasDrawer ?? false,
+                                    visible: scaffold!.hasDrawer,
                                     child: IconTheme(
                                       data: iconTheme,
                                       child: Padding(
                                         padding: const EdgeInsets.only(right: 10),
                                         child: IconButton(
                                           icon: const Icon(Icons.menu),
-                                          onPressed: () => scaffold!.openDrawer(),
+                                          onPressed: () => scaffold.openDrawer(),
                                           tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip
                                         ),
                                       )
@@ -401,7 +411,14 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                           ),
                                         ),
                                       ),
-                                      replacement: const SizedBox()
+                                      replacement: Visibility(
+                                        visible: widget.leading != null,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(right: 10),
+                                          child: widget.leading,
+                                        ),
+                                        replacement: const SizedBox(),
+                                      )
                                     )
                                   ),
                                   Expanded(
@@ -425,6 +442,10 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                           onPressed: () {
                                             _controller.forward();
                                             _focusNode.requestFocus();
+
+                                            if (widget.openOverlayOSearch) {
+                                              openOverlay();
+                                            }
                                           },
                                           tooltip: MaterialLocalizations.of(context).searchFieldLabel
                                         )
@@ -459,7 +480,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                       color: searchBackgroundColor
                                     ),
                                     child: Opacity(
-                                      opacity: _textfieldOpacityAnimation.value,
+                                      opacity: _textFieldOpacityAnimation.value,
                                       child: TextField(
                                         onSubmitted: (value) {
                                           widget.onSearch(_searchController.text);
