@@ -60,7 +60,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   /// Can be used to determine if it will be a normal or floating AppBar
   final bool isFloating;
   /// Can be used to determine if the suggestions overlay will be opened when clicking search
-  final bool openOverlayOSearch;
+  final bool openOverlayOnSearch;
   /// Can be used to set the AppBar title style
   final TextStyle? titleTextStyle;
   /// Can be used to set the search input background color
@@ -122,7 +122,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.elevation,
     this.appBarHeight = 56,
     this.isFloating = false,
-    this.openOverlayOSearch = false,
+    this.openOverlayOnSearch = false,
     this.titleTextStyle,
     this.iconTheme,
     this.suggestionTextStyle = const TextStyle(),
@@ -443,7 +443,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                             _controller.forward();
                                             _focusNode.requestFocus();
 
-                                            if (widget.openOverlayOSearch) {
+                                            if (widget.openOverlayOnSearch) {
                                               openOverlay();
                                             }
                                           },

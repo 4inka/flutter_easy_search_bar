@@ -1,3 +1,8 @@
+## 2.4.2 - [17-11-2022]
+
+### Fixed
+* Correcting parameter name from `openOverlayOSearch` to `openOverlayOnSearch`
+
 ## 2.4.1 - [17-11-2022]
 
 ### Changed

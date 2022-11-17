@@ -15,7 +15,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 ``` yaml
 dependencies:
   ...
-  easy_search_bar: ^2.3.1
+  easy_search_bar: ^2.4.2
 ```
 
 ## Migrating from 1.x.x to 2.x.x
@@ -128,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
 | appBarHeight              | `double`                                      |        :x:         | Can be used to change AppBar height                                                                                    | 56                          |
 | animationDuration         | `Duration`                                    |        :x:         | Can be used to set a duration for the AppBar search show and hide animation                                            | Duration(milliseconds: 450) |
 | isFloating                | `bool`                                        |        :x:         | Can be used to determine if it will be a normal or floating AppBar                                                     | false                       |
-| openOverlayOSearch        | `bool`                                        |        :x:         | Can be used to determine if the suggestions overlay will be opened when clicking search                                | false                       |
+| openOverlayOnSearch       | `bool`                                        |        :x:         | Can be used to determine if the suggestions overlay will be opened when clicking search                                | false                       |
 | titleTextStyle            | `TextStyle`                                   |        :x:         | Can be used to set the AppBar title style                                                                              |                             |
 | searchBackgroundColor     | `Color`                                       |        :x:         | Can be used to set the search input background color                                                                   |                             |
 | searchCursorColor         | `Color`                                       |        :x:         | Can be used to set search textField cursor color                                                                       |                             |
