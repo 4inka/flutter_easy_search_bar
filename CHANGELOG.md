@@ -1,4 +1,9 @@
-## 2.4.0 - [11-10-2022]
+## 2.4.1 - [17-11-2022]
+
+### Changed
+* Updating README.md
+
+## 2.4.0 - [17-11-2022]
 
 ### Added
 * Adding `leading` and `openOverlayOSearch` parameters

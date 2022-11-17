@@ -154,6 +154,6 @@ If you encounter any issue you or want to leave a suggestion you can do it by fi
 ## Contributions
 Here's the list of our awesome contributors:
 - [Seiji Tanaka](https://github.com/yameguun)
-- [Miklos Zsido](https://github.com/zsmiklos)
+- [Victor Gabriel](https://github.com/vctrgbrl)
 
 ### Thank you for the support!
