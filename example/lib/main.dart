@@ -14,7 +14,18 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String searchValue = '';
-  final List<String> _suggestions = ['Afeganistan', 'Albania', 'Algeria', 'Australia', 'Brazil', 'German', 'Madagascar', 'Mozambique', 'Portugal', 'Zambia'];
+  final List<String> _suggestions = [
+    'Afeganistan',
+    'Albania',
+    'Algeria',
+    'Australia',
+    'Brazil',
+    'German',
+    'Madagascar',
+    'Mozambique',
+    'Portugal',
+    'Zambia'
+  ];
 
   Future<List<String>> _fetchSuggestions(String searchValue) async {
     await Future.delayed(const Duration(milliseconds: 750));
@@ -26,29 +37,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
-      title: 'Example',
-      theme: ThemeData(
-        primarySwatch: Colors.orange
-      ),
-      home: Scaffold(
-        appBar: EasySearchBar(
-          title: const Text('Example'),
-          onSearch: (value) => setState(() => searchValue = value),
-          actions: [
-            IconButton(
-              icon: const Icon(
-                Icons.person
-              ),
-              onPressed: () {}
-            )
-          ],
-          asyncSuggestions: (value) async => await _fetchSuggestions(value)
-        ),
-        drawer: Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
+    return MaterialApp(
+        title: 'Example',
+        theme: ThemeData(primarySwatch: Colors.orange),
+        home: Scaffold(
+            appBar: EasySearchBar(
+                title: const Text('Example'),
+                onSearch: (value) => setState(() => searchValue = value),
+                actions: [
+                  IconButton(icon: const Icon(Icons.person), onPressed: () {})
+                ],
+                asyncSuggestions: (value) async =>
+                    await _fetchSuggestions(value)),
+            drawer: Drawer(
+                child: ListView(padding: EdgeInsets.zero, children: [
               const DrawerHeader(
                 decoration: BoxDecoration(
                   color: Colors.blue,
@@ -56,20 +58,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('Drawer Header'),
               ),
               ListTile(
-                title: const Text('Item 1'),
-                onTap: () => Navigator.pop(context)
-              ),
+                  title: const Text('Item 1'),
+                  onTap: () => Navigator.pop(context)),
               ListTile(
-                title: const Text('Item 2'),
-                onTap: () => Navigator.pop(context)
-              )
-            ]
-          )
-        ),
-        body: Center(
-          child: Text('Value: $searchValue')
-        )
-      )
-    );
+                  title: const Text('Item 2'),
+                  onTap: () => Navigator.pop(context))
+            ])),
+            body: Center(child: Text('Value: $searchValue'))));
   }
 }
