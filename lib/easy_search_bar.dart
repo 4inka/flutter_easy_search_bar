@@ -482,15 +482,7 @@ class _EasySearchBarState extends State<EasySearchBar>
                                           ...List.generate(
                                               widget.actions.length + 1,
                                               (index) {
-                                            if (widget.putActionsOnRight) {
-                                              if (widget.actions.length ==
-                                                  index) {
-                                                return IconTheme(
-                                                    data: iconTheme,
-                                                    child: widget
-                                                        .actions[index - 1]);
-                                              }
-
+                                            if (widget.actions.length == index && !widget.putActionsOnRight || index == 0 && widget.putActionsOnRight) {
                                               return IconTheme(
                                                   data: iconTheme,
                                                   child: IconButton(
@@ -512,37 +504,12 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                           MaterialLocalizations
                                                                   .of(context)
                                                               .searchFieldLabel));
-                                            } else {
-                                              if (widget.actions.length ==
-                                                  index) {
-                                                return IconTheme(
-                                                    data: iconTheme,
-                                                    child: IconButton(
-                                                        icon: const Icon(
-                                                            Icons.search),
-                                                        iconSize:
-                                                            iconTheme.size ??
-                                                                24,
-                                                        onPressed: () {
-                                                          _controller.forward();
-                                                          _focusNode
-                                                              .requestFocus();
-
-                                                          if (widget
-                                                              .openOverlayOnSearch) {
-                                                            openOverlay();
-                                                          }
-                                                        },
-                                                        tooltip:
-                                                            MaterialLocalizations
-                                                                    .of(context)
-                                                                .searchFieldLabel));
-                                              }
-
-                                              return IconTheme(
-                                                  data: iconTheme,
-                                                  child: widget.actions[index]);
                                             }
+                                            
+                                            return IconTheme(
+                                              data: iconTheme,
+                                              child: widget.actions[widget.putActionsOnRight ? (index - 1) : index]
+                                            );
                                           })
                                         ])),
                                 Positioned(
