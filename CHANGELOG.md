@@ -3,11 +3,8 @@
 ### Added
 * Added `showClearSearchIcon` parameter to show or hide search clear textfield button
 * Added `searchClearIconTheme` parameter to customize search clear textfield button
-
-### Changed
-* 
-
-### Fixed
+* Added `searchTextDirection` parameter to customize search clear textfield button
+* Added `putActionsOnRight` parameter to choose if other actions will be placed on left or right of search icon
 
 ## 2.4.2 - [17-11-2022]
 

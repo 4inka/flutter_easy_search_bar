@@ -135,7 +135,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
 
   /// Can be used to set the debounce time for async data fetch
   final Duration debounceDuration;
-  /// Text Direction for the search textField
+  
+  /// Can be used to change text direction
   final TextDirection searchTextDirection;
 
   const EasySearchBar(
