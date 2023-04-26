@@ -1,4 +1,4 @@
-## 2.4.3 - [26-04-2023]
+## 2.5.0 - [26-04-2023]
 
 ### Added
 * Added `showClearSearchIcon` parameter to show or hide search clear textfield button

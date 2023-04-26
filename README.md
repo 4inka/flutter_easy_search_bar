@@ -160,5 +160,6 @@ Here's the list of our awesome contributors:
 - [Seiji Tanaka](https://github.com/yameguun)
 - [Victor Gabriel](https://github.com/vctrgbrl)
 - [Ivan Terekhin](https://github.com/JEuler)
+- [Dolev Franco](https://github.com/dtkdt100)
 
 ### Thank you for the support!
