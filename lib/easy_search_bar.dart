@@ -297,7 +297,7 @@ class _EasySearchBarState extends State<EasySearchBar>
     }
     if (!_hasOpenedOverlay &&
         (widget.suggestions != null || widget.asyncSuggestions != null)) {
-      Overlay.of(context)!.insert(_overlayEntry!);
+      Overlay.of(context).insert(_overlayEntry!);
       setState(() => _hasOpenedOverlay = true);
     }
   }
