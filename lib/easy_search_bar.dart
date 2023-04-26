@@ -77,6 +77,10 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final TextInputType searchTextKeyboardType;
   /// Can be used to set custom icon theme for the search textField back button
   final IconThemeData? searchBackIconTheme;
+  /// Can be used to show search clear textField button
+  final bool showClearSearchIcon;
+  /// Can be used to set custom icon theme for the search clear textField button
+  final IconThemeData? searchClearIconTheme;
   /// Can be used to set SystemUiOverlayStyle to the AppBar
   final SystemUiOverlayStyle? systemOverlayStyle;
   /// Can be used to create a suggestions list
@@ -111,6 +115,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
     this.suggestions,
     this.onSuggestionTap,
     this.searchBackIconTheme,
+    this.showClearSearchIcon = false,
+    this.searchClearIconTheme,
     this.asyncSuggestions,
     this.searchCursorColor,
     this.searchHintText = '',
@@ -338,7 +344,12 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
       fontStyle: FontStyle.italic
     );
 
-    IconThemeData searchIconTheme = widget.searchBackIconTheme ?? IconThemeData(
+    IconThemeData searchBackIconTheme = widget.searchBackIconTheme ?? IconThemeData(
+      size: 24,
+      color: Theme.of(context).primaryColor
+    );
+
+    IconThemeData searchClearIconTheme = widget.searchClearIconTheme ?? IconThemeData(
       size: 24,
       color: Theme.of(context).primaryColor
     );
@@ -507,7 +518,7 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                           hintStyle: searchHintStyle,
                                           border: InputBorder.none,
                                           prefixIcon: IconTheme(
-                                            data: searchIconTheme,
+                                            data: searchBackIconTheme,
                                             child: IconButton(
                                               icon: const Icon(
                                                 Icons.arrow_back_outlined
@@ -518,6 +529,18 @@ class _EasySearchBarState extends State<EasySearchBar> with TickerProviderStateM
                                                 widget.onSearch(_searchController.text);
                                                 _focusNode.unfocus();
                                                 closeOverlay();
+                                              }
+                                            )
+                                          ),
+                                          suffixIcon: IconTheme(
+                                            data: searchClearIconTheme,
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.close_rounded
+                                              ),
+                                              onPressed: () {
+                                                _searchController.clear();
+                                                widget.onSearch(_searchController.text);
                                               }
                                             )
                                           )
