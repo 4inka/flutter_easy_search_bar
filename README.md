@@ -15,7 +15,7 @@ In the `pubspec.yaml` of your flutter project, add the following dependency:
 ``` yaml
 dependencies:
   ...
-  easy_search_bar: ^2.4.2
+  easy_search_bar: ^2.5.0
 ```
 
 ## Migrating from 1.x.x to 2.x.x
@@ -147,6 +147,10 @@ class _MyHomePageState extends State<MyHomePage> {
 | suggestionBuilder         | `Widget Function(String data)`                |        :x:         | Can be used to create custom suggestion item widget                                                                    |                             |
 | onSuggestionTap           | `Function(String data)`                       |        :x:         | Instead of using the default suggestion tap action that fills the textField, you can set your own custom action for it |                             |
 | debounceDuration          | `Duration`                                    |        :x:         | Can be used to set the debounce time for async data fetch                                                              | Duration(milliseconds: 400) |
+| showClearSearchIcon       | `bool`                                    | :x: | Can be used to show search clear textField button                                                              | false |
+| searchClearIconTheme      | `IconThemeData`                                    |        :x:         | Can be used to set custom icon theme for the search clear textField button                                                              |                             |
+| searchTextDirection       | `TextDirection`                                    |        :x:         | Can be used to change text direction                                                              | TextDirection.ltr |
+| putActionsOnRight         | `bool`                                    | :x: | Can be used to determine if the actions button will be placed at right of the appbar                                                              | false |
 
 ## Issues & Suggestions
 If you encounter any issue you or want to leave a suggestion you can do it by filling an [issue](https://github.com/4inka/flutter_easy_search_bar/issues).
@@ -155,5 +159,6 @@ If you encounter any issue you or want to leave a suggestion you can do it by fi
 Here's the list of our awesome contributors:
 - [Seiji Tanaka](https://github.com/yameguun)
 - [Victor Gabriel](https://github.com/vctrgbrl)
+- [Ivan Terekhin](https://github.com/JEuler)
 
 ### Thank you for the support!

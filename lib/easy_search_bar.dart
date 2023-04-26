@@ -135,6 +135,9 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
 
   /// Can be used to set the debounce time for async data fetch
   final Duration debounceDuration;
+  
+  /// Can be used to change text direction
+  final TextDirection searchTextDirection;
 
   const EasySearchBar(
       {Key? key,
@@ -170,7 +173,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
       this.suggestionBackgroundColor,
       this.animationDuration = const Duration(milliseconds: 450),
       this.debounceDuration = const Duration(milliseconds: 400),
-      this.searchTextKeyboardType = TextInputType.text})
+      this.searchTextKeyboardType = TextInputType.text,
+      this.searchTextDirection = TextDirection.ltr})
       : assert(elevation == null || elevation >= 0.0),
         super(key: key);
 
@@ -555,55 +559,58 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                   color: searchBackgroundColor),
                                               child: Opacity(
                                                   opacity: _textFieldOpacityAnimation.value,
-                                                  child: TextField(
-                                                      onSubmitted: (value) {
-                                                        widget.onSearch(
-                                                            _searchController
-                                                                .text);
-                                                        _focusNode.unfocus();
-                                                        closeOverlay();
-                                                      },
-                                                      maxLines: 1,
-                                                      controller: _searchController,
-                                                      textInputAction: TextInputAction.search,
-                                                      cursorColor: cursorColor,
-                                                      focusNode: _focusNode,
-                                                      textAlignVertical: TextAlignVertical.center,
-                                                      style: widget.searchTextStyle,
-                                                      keyboardType: widget.searchTextKeyboardType,
-                                                      decoration: InputDecoration(
-                                                          contentPadding: const EdgeInsets.only(left: 20, right: 10),
-                                                          fillColor: searchBackgroundColor,
-                                                          filled: true,
-                                                          hintText: widget.searchHintText,
-                                                          hintMaxLines: 1,
-                                                          hintStyle: searchHintStyle,
-                                                          border: InputBorder.none,
-                                                          prefixIcon: IconTheme(
-                                                              data: searchBackIconTheme,
-                                                              child: IconButton(
-                                                                  icon: const Icon(Icons.arrow_back_outlined),
-                                                                  onPressed: () {
-                                                                    _controller
-                                                                        .reverse();
-                                                                    _searchController
+                                                  child:Directionality(
+                                                    textDirection: widget.searchTextDirection,
+                                                    child: TextField(
+                                                        onSubmitted: (value) {
+                                                          widget.onSearch(
+                                                              _searchController
+                                                                  .text);
+                                                          _focusNode.unfocus();
+                                                          closeOverlay();
+                                                        },
+                                                        maxLines: 1,
+                                                        controller: _searchController,
+                                                        textInputAction: TextInputAction.search,
+                                                        cursorColor: cursorColor,
+                                                        focusNode: _focusNode,
+                                                        textAlignVertical: TextAlignVertical.center,
+                                                        style: widget.searchTextStyle,
+                                                        keyboardType: widget.searchTextKeyboardType,
+                                                        decoration: InputDecoration(
+                                                            contentPadding: const EdgeInsets.only(left: 20, right: 10),
+                                                            fillColor: searchBackgroundColor,
+                                                            filled: true,
+                                                            hintText: widget.searchHintText,
+                                                            hintMaxLines: 1,
+                                                            hintStyle: searchHintStyle,
+                                                            border: InputBorder.none,
+                                                            prefixIcon: IconTheme(
+                                                                data: searchBackIconTheme,
+                                                                child: IconButton(
+                                                                    icon: const Icon(Icons.arrow_back_outlined),
+                                                                    onPressed: () {
+                                                                      _controller
+                                                                          .reverse();
+                                                                      _searchController
+                                                                          .clear();
+                                                                      widget.onSearch(
+                                                                          _searchController
+                                                                              .text);
+                                                                      _focusNode
+                                                                          .unfocus();
+                                                                      closeOverlay();
+                                                                    })),
+                                                            suffixIcon: IconTheme(
+                                                                data: searchClearIconTheme,
+                                                                child: IconButton(
+                                                                    icon: const Icon(Icons.close_rounded),
+                                                                    onPressed: () {
+                                                                      _searchController
                                                                         .clear();
-                                                                    widget.onSearch(
-                                                                        _searchController
-                                                                            .text);
-                                                                    _focusNode
-                                                                        .unfocus();
-                                                                    closeOverlay();
-                                                                  })),
-                                                          suffixIcon: IconTheme(
-                                                              data: searchClearIconTheme,
-                                                              child: IconButton(
-                                                                  icon: const Icon(Icons.close_rounded),
-                                                                  onPressed: () {
-                                                                    _searchController
-                                                                      .clear();
-                                                                    widget.onSearch(_searchController.text);
-                                                                  }))))));
+                                                                      widget.onSearch(_searchController.text);
+                                                                    })))),
+                                                  )));
                                         }))
                               ])));
                     }),
