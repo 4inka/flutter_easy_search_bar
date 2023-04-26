@@ -99,6 +99,12 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
 
   /// Can be used to set custom icon theme for the search textField back button
   final IconThemeData? searchBackIconTheme;
+  
+  /// Can be used to show search clear textField button
+  final bool showClearSearchIcon;
+  
+  /// Can be used to set custom icon theme for the search clear textField button
+  final IconThemeData? searchClearIconTheme;
 
   /// Can be used to set SystemUiOverlayStyle to the AppBar
   final SystemUiOverlayStyle? systemOverlayStyle;
@@ -143,6 +149,8 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
       this.suggestions,
       this.onSuggestionTap,
       this.searchBackIconTheme,
+      this.showClearSearchIcon = false,
+      this.searchClearIconTheme,
       this.asyncSuggestions,
       this.searchCursorColor,
       this.searchHintText = '',
@@ -372,7 +380,10 @@ class _EasySearchBarState extends State<EasySearchBar>
         theme.inputDecorationTheme.hintStyle ??
         const TextStyle(color: Colors.grey, fontStyle: FontStyle.italic);
 
-    IconThemeData searchIconTheme = widget.searchBackIconTheme ??
+    IconThemeData searchBackIconTheme = widget.searchBackIconTheme ??
+        IconThemeData(size: 24, color: Theme.of(context).primaryColor);
+
+    IconThemeData searchClearIconTheme = widget.searchClearIconTheme ??
         IconThemeData(size: 24, color: Theme.of(context).primaryColor);
 
     SystemUiOverlayStyle systemOverlayStyle = widget.systemOverlayStyle ??
@@ -505,12 +516,13 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                                   .of(context)
                                                               .searchFieldLabel));
                                             }
-                                            
                                             return IconTheme(
                                               data: iconTheme,
                                               child: widget.actions[widget.putActionsOnRight ? (index - 1) : index]
                                             );
-                                          })
+                                          },
+                                          //tooltip: MaterialLocalizations.of(context).searchFieldLabel
+                                        )
                                         ])),
                                 Positioned(
                                     right: 0,
@@ -568,7 +580,7 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                           hintStyle: searchHintStyle,
                                                           border: InputBorder.none,
                                                           prefixIcon: IconTheme(
-                                                              data: searchIconTheme,
+                                                              data: searchBackIconTheme,
                                                               child: IconButton(
                                                                   icon: const Icon(Icons.arrow_back_outlined),
                                                                   onPressed: () {
@@ -582,6 +594,15 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                                     _focusNode
                                                                         .unfocus();
                                                                     closeOverlay();
+                                                                  })),
+                                                          suffixIcon: IconTheme(
+                                                              data: searchClearIconTheme,
+                                                              child: IconButton(
+                                                                  icon: const Icon(Icons.close_rounded),
+                                                                  onPressed: () {
+                                                                    _searchController
+                                                                      .clear();
+                                                                    widget.onSearch(_searchController.text);
                                                                   }))))));
                                         }))
                               ])));
