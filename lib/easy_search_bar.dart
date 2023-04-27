@@ -35,7 +35,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
+class EasySearchBar<T> extends StatefulWidget implements PreferredSizeWidget {
   /// The title to be displayed inside AppBar
   final Widget title;
 
@@ -99,10 +99,10 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
 
   /// Can be used to set custom icon theme for the search textField back button
   final IconThemeData? searchBackIconTheme;
-  
+
   /// Can be used to show search clear textField button
   final bool showClearSearchIcon;
-  
+
   /// Can be used to set custom icon theme for the search clear textField button
   final IconThemeData? searchClearIconTheme;
 
@@ -110,10 +110,10 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final SystemUiOverlayStyle? systemOverlayStyle;
 
   /// Can be used to create a suggestions list
-  final List<String>? suggestions;
+  final List<T>? suggestions;
 
   /// Can be used to set async suggestions list
-  final Future<List<String>> Function(String value)? asyncSuggestions;
+  final Future<List<T>> Function(String value)? asyncSuggestions;
 
   /// Can be used to change suggestion list elevation
   final double suggestionsElevation;
@@ -128,14 +128,17 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
   final Color? suggestionBackgroundColor;
 
   /// Can be used to create custom suggestion item widget
-  final Widget Function(String data)? suggestionBuilder;
+  final Widget Function(T data)? suggestionBuilder;
 
   /// Instead of using the default suggestion tap action that fills the textField, you can set your own custom action for it
-  final Function(String data)? onSuggestionTap;
+  final Function(T data)? onSuggestionTap;
+
+  /// Converts a given suggested item to a corresponding string
+  final String Function(T data)? suggestionToString;
 
   /// Can be used to set the debounce time for async data fetch
   final Duration debounceDuration;
-  
+
   /// Can be used to change text direction
   final TextDirection searchTextDirection;
 
@@ -151,6 +154,7 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
       this.systemOverlayStyle,
       this.suggestions,
       this.onSuggestionTap,
+      this.suggestionToString,
       this.searchBackIconTheme,
       this.showClearSearchIcon = false,
       this.searchClearIconTheme,
@@ -179,20 +183,20 @@ class EasySearchBar extends StatefulWidget implements PreferredSizeWidget {
         super(key: key);
 
   @override
-  State<EasySearchBar> createState() => _EasySearchBarState();
+  State<EasySearchBar<T>> createState() => _EasySearchBarState<T>();
 
   @override
   Size get preferredSize =>
       Size.fromHeight(appBarHeight + (isFloating ? 5 : 0));
 }
 
-class _EasySearchBarState extends State<EasySearchBar>
+class _EasySearchBarState<T> extends State<EasySearchBar<T>>
     with TickerProviderStateMixin {
   final LayerLink _layerLink = LayerLink();
   bool _hasOpenedOverlay = false;
   bool _isLoading = false;
   OverlayEntry? _overlayEntry;
-  List<String> _suggestions = [];
+  List<T> _suggestions = [];
   Timer? _debounce;
   String _previousAsyncSearchText = '';
   final FocusNode _focusNode = FocusNode();
@@ -274,7 +278,7 @@ class _EasySearchBarState extends State<EasySearchBar>
                   child: Container(
                       constraints: const BoxConstraints(maxHeight: 150),
                       margin: const EdgeInsets.all(5),
-                      child: FilterableList(
+                      child: FilterableList<T>(
                           loading: _isLoading,
                           loader: _suggestionLoaderBuilder(),
                           items: _suggestions,
@@ -283,15 +287,16 @@ class _EasySearchBarState extends State<EasySearchBar>
                           suggestionTextStyle: widget.suggestionTextStyle,
                           suggestionBackgroundColor:
                               widget.suggestionBackgroundColor,
+                          suggestionToString: suggestionToString,
                           onItemTapped: (value) {
                             _searchController.value = TextEditingValue(
-                                text: value,
+                                text: suggestionToString(value),
                                 selection: TextSelection.collapsed(
-                                    offset: value.length));
+                                    offset: suggestionToString(value).length));
                             if (widget.onSuggestionTap != null) {
                               widget.onSuggestionTap!(value);
                             }
-                            widget.onSearch(value);
+                            widget.onSearch(suggestionToString(value));
                             closeOverlay();
                           })))));
     }
@@ -312,7 +317,9 @@ class _EasySearchBarState extends State<EasySearchBar>
 
   void updateSyncSuggestions(String input) {
     _suggestions = widget.suggestions!.where((element) {
-      return element.toLowerCase().contains(input.toLowerCase());
+      return suggestionToString(element)
+          .toLowerCase()
+          .contains(input.toLowerCase());
     }).toList();
     rebuildOverlay();
   }
@@ -341,6 +348,9 @@ class _EasySearchBarState extends State<EasySearchBar>
       _overlayEntry!.markNeedsBuild();
     }
   }
+
+  String Function(T) get suggestionToString =>
+      widget.suggestionToString ?? (s) => s.toString();
 
   @override
   Widget build(BuildContext context) {
@@ -495,38 +505,47 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                     child: widget.title,
                                                   ))),
                                           ...List.generate(
-                                              widget.actions.length + 1,
-                                              (index) {
-                                            if (widget.actions.length == index && !widget.putActionsOnRight || index == 0 && widget.putActionsOnRight) {
+                                            widget.actions.length + 1,
+                                            (index) {
+                                              if (widget.actions.length ==
+                                                          index &&
+                                                      !widget
+                                                          .putActionsOnRight ||
+                                                  index == 0 &&
+                                                      widget
+                                                          .putActionsOnRight) {
+                                                return IconTheme(
+                                                    data: iconTheme,
+                                                    child: IconButton(
+                                                        icon: const Icon(
+                                                            Icons.search),
+                                                        iconSize:
+                                                            iconTheme.size ??
+                                                                24,
+                                                        onPressed: () {
+                                                          _controller.forward();
+                                                          _focusNode
+                                                              .requestFocus();
+
+                                                          if (widget
+                                                              .openOverlayOnSearch) {
+                                                            openOverlay();
+                                                          }
+                                                        },
+                                                        tooltip:
+                                                            MaterialLocalizations
+                                                                    .of(context)
+                                                                .searchFieldLabel));
+                                              }
                                               return IconTheme(
                                                   data: iconTheme,
-                                                  child: IconButton(
-                                                      icon: const Icon(
-                                                          Icons.search),
-                                                      iconSize:
-                                                          iconTheme.size ?? 24,
-                                                      onPressed: () {
-                                                        _controller.forward();
-                                                        _focusNode
-                                                            .requestFocus();
-
-                                                        if (widget
-                                                            .openOverlayOnSearch) {
-                                                          openOverlay();
-                                                        }
-                                                      },
-                                                      tooltip:
-                                                          MaterialLocalizations
-                                                                  .of(context)
-                                                              .searchFieldLabel));
-                                            }
-                                            return IconTheme(
-                                              data: iconTheme,
-                                              child: widget.actions[widget.putActionsOnRight ? (index - 1) : index]
-                                            );
-                                          },
-                                          //tooltip: MaterialLocalizations.of(context).searchFieldLabel
-                                        )
+                                                  child: widget.actions[
+                                                      widget.putActionsOnRight
+                                                          ? (index - 1)
+                                                          : index]);
+                                            },
+                                            //tooltip: MaterialLocalizations.of(context).searchFieldLabel
+                                          )
                                         ])),
                                 Positioned(
                                     right: 0,
@@ -559,8 +578,9 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                   color: searchBackgroundColor),
                                               child: Opacity(
                                                   opacity: _textFieldOpacityAnimation.value,
-                                                  child:Directionality(
-                                                    textDirection: widget.searchTextDirection,
+                                                  child: Directionality(
+                                                    textDirection: widget
+                                                        .searchTextDirection,
                                                     child: TextField(
                                                         onSubmitted: (value) {
                                                           widget.onSearch(
@@ -570,46 +590,65 @@ class _EasySearchBarState extends State<EasySearchBar>
                                                           closeOverlay();
                                                         },
                                                         maxLines: 1,
-                                                        controller: _searchController,
-                                                        textInputAction: TextInputAction.search,
-                                                        cursorColor: cursorColor,
+                                                        controller:
+                                                            _searchController,
+                                                        textInputAction:
+                                                            TextInputAction
+                                                                .search,
+                                                        cursorColor:
+                                                            cursorColor,
                                                         focusNode: _focusNode,
-                                                        textAlignVertical: TextAlignVertical.center,
-                                                        style: widget.searchTextStyle,
-                                                        keyboardType: widget.searchTextKeyboardType,
-                                                        decoration: InputDecoration(
-                                                            contentPadding: const EdgeInsets.only(left: 20, right: 10),
-                                                            fillColor: searchBackgroundColor,
-                                                            filled: true,
-                                                            hintText: widget.searchHintText,
-                                                            hintMaxLines: 1,
-                                                            hintStyle: searchHintStyle,
-                                                            border: InputBorder.none,
-                                                            prefixIcon: IconTheme(
-                                                                data: searchBackIconTheme,
-                                                                child: IconButton(
-                                                                    icon: const Icon(Icons.arrow_back_outlined),
-                                                                    onPressed: () {
-                                                                      _controller
-                                                                          .reverse();
-                                                                      _searchController
-                                                                          .clear();
-                                                                      widget.onSearch(
+                                                        textAlignVertical:
+                                                            TextAlignVertical
+                                                                .center,
+                                                        style: widget
+                                                            .searchTextStyle,
+                                                        keyboardType: widget
+                                                            .searchTextKeyboardType,
+                                                        decoration:
+                                                            InputDecoration(
+                                                                contentPadding:
+                                                                    const EdgeInsets.only(
+                                                                        left:
+                                                                            20,
+                                                                        right:
+                                                                            10),
+                                                                fillColor:
+                                                                    searchBackgroundColor,
+                                                                filled: true,
+                                                                hintText: widget
+                                                                    .searchHintText,
+                                                                hintMaxLines: 1,
+                                                                hintStyle:
+                                                                    searchHintStyle,
+                                                                border:
+                                                                    InputBorder
+                                                                        .none,
+                                                                prefixIcon: IconTheme(
+                                                                    data: searchBackIconTheme,
+                                                                    child: IconButton(
+                                                                        icon: const Icon(Icons.arrow_back_outlined),
+                                                                        onPressed: () {
+                                                                          _controller
+                                                                              .reverse();
                                                                           _searchController
-                                                                              .text);
-                                                                      _focusNode
-                                                                          .unfocus();
-                                                                      closeOverlay();
-                                                                    })),
-                                                            suffixIcon: IconTheme(
-                                                                data: searchClearIconTheme,
-                                                                child: IconButton(
-                                                                    icon: const Icon(Icons.close_rounded),
-                                                                    onPressed: () {
-                                                                      _searchController
-                                                                        .clear();
-                                                                      widget.onSearch(_searchController.text);
-                                                                    })))),
+                                                                              .clear();
+                                                                          widget
+                                                                              .onSearch(_searchController.text);
+                                                                          _focusNode
+                                                                              .unfocus();
+                                                                          closeOverlay();
+                                                                        })),
+                                                                suffixIcon: IconTheme(
+                                                                    data: searchClearIconTheme,
+                                                                    child: IconButton(
+                                                                        icon: const Icon(Icons.close_rounded),
+                                                                        onPressed: () {
+                                                                          _searchController
+                                                                              .clear();
+                                                                          widget
+                                                                              .onSearch(_searchController.text);
+                                                                        })))),
                                                   )));
                                         }))
                               ])));
