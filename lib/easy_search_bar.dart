@@ -374,7 +374,7 @@ class _EasySearchBarState extends State<EasySearchBar>
 
     TextStyle? titleTextStyle = widget.titleTextStyle ??
         appBarTheme.titleTextStyle ??
-        theme.textTheme.headline6!.copyWith(color: foregroundColor);
+        theme.textTheme.titleLarge!.copyWith(color: foregroundColor);
 
     double? elevation = widget.elevation ?? appBarTheme.elevation ?? 5;
 
