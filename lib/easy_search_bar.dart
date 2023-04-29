@@ -543,8 +543,7 @@ class _EasySearchBarState<T> extends State<EasySearchBar<T>>
                                                       widget.putActionsOnRight
                                                           ? (index - 1)
                                                           : index]);
-                                            },
-                                            //tooltip: MaterialLocalizations.of(context).searchFieldLabel
+                                            }
                                           )
                                         ])),
                                 Positioned(
