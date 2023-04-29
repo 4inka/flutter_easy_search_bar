@@ -27,16 +27,17 @@
 
 import 'package:flutter/material.dart';
 
-class FilterableList extends StatelessWidget {
-  final List<String> items;
-  final Function(String) onItemTapped;
+class FilterableList<T> extends StatelessWidget {
+  final List<T> items;
+  final Function(T) onItemTapped;
   final double elevation;
   final double maxListHeight;
   final TextStyle suggestionTextStyle;
   final Widget? loader;
   final Color? suggestionBackgroundColor;
   final bool loading;
-  final Widget Function(String data)? suggestionBuilder;
+  final Widget Function(T data)? suggestionBuilder;
+  final String Function(T data)? suggestionToString;
 
   const FilterableList(
       {Key? key,
@@ -48,6 +49,7 @@ class FilterableList extends StatelessWidget {
       this.maxListHeight = 150,
       this.suggestionTextStyle = const TextStyle(),
       this.suggestionBackgroundColor,
+      this.suggestionToString,
       this.loading = false})
       : super(key: key);
 
@@ -83,13 +85,16 @@ class FilterableList extends StatelessWidget {
                             onTap: () => onItemTapped(items[index]));
                       }
 
+                      final toString =
+                          suggestionToString ?? (s) => s.toString();
+
                       return Material(
                           color: Colors.transparent,
                           child: InkWell(
                               child: Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(5),
-                                  child: Text(items[index],
+                                  child: Text(toString(items[index]),
                                       style: suggestionTextStyle)),
                               onTap: () => onItemTapped(items[index])));
                     }))));
