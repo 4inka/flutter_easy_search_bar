@@ -142,6 +142,9 @@ class EasySearchBar<T> extends StatefulWidget implements PreferredSizeWidget {
   /// Can be used to change text direction
   final TextDirection searchTextDirection;
 
+  /// Can be uses to allow user to cancel suggestions with escape or back button.
+  final bool cancelableSuggestions;
+
   const EasySearchBar(
       {Key? key,
       required this.title,
@@ -178,7 +181,8 @@ class EasySearchBar<T> extends StatefulWidget implements PreferredSizeWidget {
       this.animationDuration = const Duration(milliseconds: 450),
       this.debounceDuration = const Duration(milliseconds: 400),
       this.searchTextKeyboardType = TextInputType.text,
-      this.searchTextDirection = TextDirection.ltr})
+      this.searchTextDirection = TextDirection.ltr,
+      this.cancelableSuggestions = true})
       : assert(elevation == null || elevation >= 0.0),
         super(key: key);
 
@@ -325,22 +329,22 @@ class _EasySearchBarState<T> extends State<EasySearchBar<T>>
   }
 
   Future<void> updateAsyncSuggestions(String input) async {
-    if (_debounce != null && _debounce!.isActive) {
-      _debounce!.cancel();
-    }
-    setState(() => _isLoading = true);
-    _debounce = Timer(widget.debounceDuration, () async {
-      if (_previousAsyncSearchText != input ||
-          _previousAsyncSearchText.isEmpty ||
-          input.isEmpty) {
+    if (_previousAsyncSearchText != input ||
+        _previousAsyncSearchText.isEmpty ||
+        input.isEmpty) {
+      if (_debounce != null && _debounce!.isActive) {
+        _debounce!.cancel();
+      }
+      setState(() => _isLoading = true);
+      _debounce = Timer(widget.debounceDuration, () async {
         _suggestions = await widget.asyncSuggestions!(input);
         setState(() {
           _isLoading = false;
           _previousAsyncSearchText = input;
         });
         rebuildOverlay();
-      }
-    });
+      });
+    }
   }
 
   void rebuildOverlay() {
@@ -406,256 +410,285 @@ class _EasySearchBarState<T> extends State<EasySearchBar<T>>
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark);
 
-    return CompositedTransformTarget(
-        link: _layerLink,
-        child: Semantics(
-            container: true,
-            child: AnnotatedRegion<SystemUiOverlayStyle>(
-              value: systemOverlayStyle,
-              child: Material(
-                color: backgroundColor,
-                elevation: elevation,
+    return WillPopScope(
+        onWillPop: widget.cancelableSuggestions
+            ? () {
+                if (_hasOpenedOverlay) {
+                  closeOverlay();
+                  return Future.value(false);
+                }
+                return Future.value(true);
+              }
+            : () {
+                return Future.value(true);
+              },
+        child: RawKeyboardListener(
+            focusNode: FocusNode(),
+            onKey: widget.cancelableSuggestions
+                ? (event) {
+                    if (_hasOpenedOverlay &&
+                        event.isKeyPressed(LogicalKeyboardKey.escape)) {
+                      closeOverlay();
+                    }
+                  }
+                : null,
+            child: CompositedTransformTarget(
+                link: _layerLink,
                 child: Semantics(
-                  explicitChildNodes: true,
-                  child: SafeArea(
-                    child: LayoutBuilder(builder: (context, constraints) {
-                      return Container(
-                          margin: EdgeInsets.only(
-                              top: widget.isFloating ? 5 : 0,
-                              left: widget.isFloating ? 5 : 0,
-                              right: widget.isFloating ? 5 : 0),
-                          height: 66,
-                          child: Material(
-                              color: backgroundColor,
-                              borderRadius: BorderRadius.circular(
-                                  widget.isFloating ? 5 : 0),
-                              child: Stack(children: [
-                                Container(
-                                    height: widget.appBarHeight +
-                                        (widget.isFloating ? 5 : 0),
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.only(
-                                        top: 10, left: 5, right: 3, bottom: 10),
-                                    child: Row(
-                                        mainAxisSize: MainAxisSize.max,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Visibility(
-                                              visible: scaffold!.hasDrawer,
-                                              child: IconTheme(
-                                                  data: iconTheme,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            right: 10),
-                                                    child: IconButton(
-                                                        icon: const Icon(
-                                                            Icons.menu),
-                                                        onPressed: () =>
-                                                            scaffold
-                                                                .openDrawer(),
-                                                        tooltip:
-                                                            MaterialLocalizations
-                                                                    .of(context)
-                                                                .openAppDrawerTooltip),
-                                                  )),
-                                              replacement: Visibility(
-                                                  visible: canPop,
-                                                  child: IconTheme(
-                                                    data: iconTheme,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              right: 10),
-                                                      child: IconButton(
-                                                          icon: const Icon(Icons
-                                                              .arrow_back_outlined),
-                                                          onPressed: () =>
-                                                              Navigator.pop(
-                                                                  context),
-                                                          tooltip: MaterialLocalizations
-                                                                  .of(context)
-                                                              .backButtonTooltip),
-                                                    ),
-                                                  ),
-                                                  replacement: Visibility(
-                                                    visible:
-                                                        widget.leading != null,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              right: 10),
-                                                      child: widget.leading,
-                                                    ),
-                                                    replacement:
-                                                        const SizedBox(),
-                                                  ))),
-                                          Expanded(
-                                              child: Container(
-                                                  margin: const EdgeInsets.only(
-                                                      left: 10),
-                                                  child: DefaultTextStyle(
-                                                    style: titleTextStyle,
-                                                    softWrap: false,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    child: widget.title,
-                                                  ))),
-                                          ...List.generate(
-                                            widget.actions.length + 1,
-                                            (index) {
-                                              if (widget.actions.length ==
-                                                          index &&
-                                                      !widget
-                                                          .putActionsOnRight ||
-                                                  index == 0 &&
-                                                      widget
-                                                          .putActionsOnRight) {
-                                                return IconTheme(
-                                                    data: iconTheme,
-                                                    child: IconButton(
-                                                        icon: const Icon(
-                                                            Icons.search),
-                                                        iconSize:
-                                                            iconTheme.size ??
-                                                                24,
-                                                        onPressed: () {
-                                                          _controller.forward();
-                                                          _focusNode
-                                                              .requestFocus();
+                    container: true,
+                    child: AnnotatedRegion<SystemUiOverlayStyle>(
+                      value: systemOverlayStyle,
+                      child: Material(
+                        color: backgroundColor,
+                        elevation: elevation,
+                        child: Semantics(
+                          explicitChildNodes: true,
+                          child: SafeArea(
+                            child:
+                                LayoutBuilder(builder: (context, constraints) {
+                              return Container(
+                                  margin: EdgeInsets.only(
+                                      top: widget.isFloating ? 5 : 0,
+                                      left: widget.isFloating ? 5 : 0,
+                                      right: widget.isFloating ? 5 : 0),
+                                  height: 66,
+                                  child: Material(
+                                      color: backgroundColor,
+                                      borderRadius: BorderRadius.circular(
+                                          widget.isFloating ? 5 : 0),
+                                      child: Stack(children: [
+                                        Container(
+                                            height: widget.appBarHeight +
+                                                (widget.isFloating ? 5 : 0),
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.only(
+                                                top: 10,
+                                                left: 5,
+                                                right: 3,
+                                                bottom: 10),
+                                            child: Row(
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  Visibility(
+                                                      visible:
+                                                          scaffold!.hasDrawer,
+                                                      child: IconTheme(
+                                                          data: iconTheme,
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .only(
+                                                                    right: 10),
+                                                            child: IconButton(
+                                                                icon: const Icon(
+                                                                    Icons.menu),
+                                                                onPressed: () =>
+                                                                    scaffold
+                                                                        .openDrawer(),
+                                                                tooltip: MaterialLocalizations.of(
+                                                                        context)
+                                                                    .openAppDrawerTooltip),
+                                                          )),
+                                                      replacement: Visibility(
+                                                          visible: canPop,
+                                                          child: IconTheme(
+                                                            data: iconTheme,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                          .only(
+                                                                      right:
+                                                                          10),
+                                                              child: IconButton(
+                                                                  icon: const Icon(
+                                                                      Icons
+                                                                          .arrow_back_outlined),
+                                                                  onPressed: () =>
+                                                                      Navigator.pop(
+                                                                          context),
+                                                                  tooltip: MaterialLocalizations.of(
+                                                                          context)
+                                                                      .backButtonTooltip),
+                                                            ),
+                                                          ),
+                                                          replacement:
+                                                              Visibility(
+                                                            visible: widget
+                                                                    .leading !=
+                                                                null,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                          .only(
+                                                                      right:
+                                                                          10),
+                                                              child: widget
+                                                                  .leading,
+                                                            ),
+                                                            replacement:
+                                                                const SizedBox(),
+                                                          ))),
+                                                  Expanded(
+                                                      child: Container(
+                                                          margin:
+                                                              const EdgeInsets
+                                                                      .only(
+                                                                  left: 10),
+                                                          child:
+                                                              DefaultTextStyle(
+                                                            style:
+                                                                titleTextStyle,
+                                                            softWrap: false,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            child: widget.title,
+                                                          ))),
+                                                  ...List.generate(
+                                                      widget.actions.length + 1,
+                                                      (index) {
+                                                    if (widget.actions.length ==
+                                                                index &&
+                                                            !widget
+                                                                .putActionsOnRight ||
+                                                        index == 0 &&
+                                                            widget
+                                                                .putActionsOnRight) {
+                                                      return IconTheme(
+                                                          data: iconTheme,
+                                                          child: IconButton(
+                                                              icon: const Icon(
+                                                                  Icons.search),
+                                                              iconSize: iconTheme
+                                                                      .size ??
+                                                                  24,
+                                                              onPressed: () {
+                                                                _controller
+                                                                    .forward();
+                                                                _focusNode
+                                                                    .requestFocus();
 
-                                                          if (widget
-                                                              .openOverlayOnSearch) {
-                                                            openOverlay();
-                                                          }
-                                                        },
-                                                        tooltip:
-                                                            MaterialLocalizations
-                                                                    .of(context)
-                                                                .searchFieldLabel));
-                                              }
-                                              return IconTheme(
-                                                  data: iconTheme,
-                                                  child: widget.actions[
-                                                      widget.putActionsOnRight
-                                                          ? (index - 1)
-                                                          : index]);
-                                            }
-                                          )
-                                        ])),
-                                Positioned(
-                                    right: 0,
-                                    top: 0,
-                                    child: AnimatedBuilder(
-                                        animation: _controller,
-                                        builder: (context, child) {
-                                          return Container(
-                                              alignment: Alignment.center,
-                                              height: constraints.maxHeight -
-                                                  (widget.isFloating ? 5 : 0),
-                                              width: _containerSizeAnimation.value *
-                                                      constraints.maxWidth -
-                                                  (_containerSizeAnimation.value *
-                                                      (widget.isFloating
-                                                          ? 10
-                                                          : 0)),
-                                              decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.only(
-                                                      bottomLeft: Radius.circular(
-                                                          _containerBorderRadiusAnimation.value *
-                                                                  30 +
+                                                                if (widget
+                                                                    .openOverlayOnSearch) {
+                                                                  openOverlay();
+                                                                }
+                                                              },
+                                                              tooltip: MaterialLocalizations
+                                                                      .of(context)
+                                                                  .searchFieldLabel));
+                                                    }
+                                                    return IconTheme(
+                                                        data: iconTheme,
+                                                        child: widget
+                                                            .actions[widget
+                                                                .putActionsOnRight
+                                                            ? (index - 1)
+                                                            : index]);
+                                                  })
+                                                ])),
+                                        Positioned(
+                                            right: 0,
+                                            top: 0,
+                                            child: AnimatedBuilder(
+                                                animation: _controller,
+                                                builder: (context, child) {
+                                                  return Container(
+                                                      alignment:
+                                                          Alignment.center,
+                                                      height: constraints
+                                                              .maxHeight -
+                                                          (widget.isFloating
+                                                              ? 5
+                                                              : 0),
+                                                      width: _containerSizeAnimation
+                                                                  .value *
+                                                              constraints
+                                                                  .maxWidth -
+                                                          (_containerSizeAnimation
+                                                                  .value *
                                                               (widget.isFloating
-                                                                  ? 5
+                                                                  ? 10
                                                                   : 0)),
-                                                      topLeft: Radius.circular(
-                                                          _containerBorderRadiusAnimation.value * 30 + (widget.isFloating ? 5 : 0)),
-                                                      topRight: Radius.circular(widget.isFloating ? 5 : 0),
-                                                      bottomRight: Radius.circular(widget.isFloating ? 5 : 0)),
-                                                  color: searchBackgroundColor),
-                                              child: Opacity(
-                                                  opacity: _textFieldOpacityAnimation.value,
-                                                  child: Directionality(
-                                                    textDirection: widget
-                                                        .searchTextDirection,
-                                                    child: TextField(
-                                                        onSubmitted: (value) {
-                                                          widget.onSearch(
-                                                              _searchController
-                                                                  .text);
-                                                          _focusNode.unfocus();
-                                                          closeOverlay();
-                                                        },
-                                                        maxLines: 1,
-                                                        controller:
-                                                            _searchController,
-                                                        textInputAction:
-                                                            TextInputAction
-                                                                .search,
-                                                        cursorColor:
-                                                            cursorColor,
-                                                        focusNode: _focusNode,
-                                                        textAlignVertical:
-                                                            TextAlignVertical
-                                                                .center,
-                                                        style: widget
-                                                            .searchTextStyle,
-                                                        keyboardType: widget
-                                                            .searchTextKeyboardType,
-                                                        decoration:
-                                                            InputDecoration(
-                                                                contentPadding:
-                                                                    const EdgeInsets.only(
-                                                                        left:
-                                                                            20,
-                                                                        right:
-                                                                            10),
-                                                                fillColor:
-                                                                    searchBackgroundColor,
-                                                                filled: true,
-                                                                hintText: widget
-                                                                    .searchHintText,
-                                                                hintMaxLines: 1,
-                                                                hintStyle:
-                                                                    searchHintStyle,
-                                                                border:
-                                                                    InputBorder
-                                                                        .none,
-                                                                prefixIcon: IconTheme(
-                                                                    data: searchBackIconTheme,
-                                                                    child: IconButton(
-                                                                        icon: const Icon(Icons.arrow_back_outlined),
-                                                                        onPressed: () {
-                                                                          _controller
-                                                                              .reverse();
-                                                                          _searchController
-                                                                              .clear();
-                                                                          widget
-                                                                              .onSearch(_searchController.text);
-                                                                          _focusNode
-                                                                              .unfocus();
-                                                                          closeOverlay();
-                                                                        })),
-                                                                suffixIcon: IconTheme(
-                                                                    data: searchClearIconTheme,
-                                                                    child: IconButton(
-                                                                        icon: const Icon(Icons.close_rounded),
-                                                                        onPressed: () {
-                                                                          _searchController
-                                                                              .clear();
-                                                                          widget
-                                                                              .onSearch(_searchController.text);
-                                                                        })))),
-                                                  )));
-                                        }))
-                              ])));
-                    }),
-                  ),
-                ),
-              ),
-            )));
+                                                      decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.only(
+                                                              bottomLeft:
+                                                                  Radius.circular(
+                                                                      _containerBorderRadiusAnimation.value * 30 + (widget.isFloating ? 5 : 0)),
+                                                              topLeft: Radius.circular(_containerBorderRadiusAnimation.value * 30 + (widget.isFloating ? 5 : 0)),
+                                                              topRight: Radius.circular(widget.isFloating ? 5 : 0),
+                                                              bottomRight: Radius.circular(widget.isFloating ? 5 : 0)),
+                                                          color: searchBackgroundColor),
+                                                      child: Opacity(
+                                                          opacity: _textFieldOpacityAnimation.value,
+                                                          child: Directionality(
+                                                            textDirection: widget
+                                                                .searchTextDirection,
+                                                            child: TextField(
+                                                                onSubmitted:
+                                                                    (value) {
+                                                                  widget.onSearch(
+                                                                      _searchController
+                                                                          .text);
+                                                                  _focusNode
+                                                                      .unfocus();
+                                                                  closeOverlay();
+                                                                },
+                                                                maxLines: 1,
+                                                                controller:
+                                                                    _searchController,
+                                                                textInputAction:
+                                                                    TextInputAction
+                                                                        .search,
+                                                                cursorColor:
+                                                                    cursorColor,
+                                                                focusNode:
+                                                                    _focusNode,
+                                                                textAlignVertical:
+                                                                    TextAlignVertical
+                                                                        .center,
+                                                                style: widget
+                                                                    .searchTextStyle,
+                                                                keyboardType: widget
+                                                                    .searchTextKeyboardType,
+                                                                decoration: InputDecoration(
+                                                                    contentPadding: const EdgeInsets.only(left: 20, right: 10),
+                                                                    fillColor: searchBackgroundColor,
+                                                                    filled: true,
+                                                                    hintText: widget.searchHintText,
+                                                                    hintMaxLines: 1,
+                                                                    hintStyle: searchHintStyle,
+                                                                    border: InputBorder.none,
+                                                                    prefixIcon: IconTheme(
+                                                                        data: searchBackIconTheme,
+                                                                        child: IconButton(
+                                                                            icon: const Icon(Icons.arrow_back_outlined),
+                                                                            onPressed: () {
+                                                                              _controller.reverse();
+                                                                              _searchController.clear();
+                                                                              widget.onSearch(_searchController.text);
+                                                                              _focusNode.unfocus();
+                                                                              closeOverlay();
+                                                                            })),
+                                                                    suffixIcon: IconTheme(
+                                                                        data: searchClearIconTheme,
+                                                                        child: IconButton(
+                                                                            icon: const Icon(Icons.close_rounded),
+                                                                            onPressed: () {
+                                                                              _searchController.clear();
+                                                                              widget.onSearch(_searchController.text);
+                                                                            })))),
+                                                          )));
+                                                }))
+                                      ])));
+                            }),
+                          ),
+                        ),
+                      ),
+                    )))));
   }
 
   @override
