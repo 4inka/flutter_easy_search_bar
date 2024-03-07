@@ -410,24 +410,20 @@ class _EasySearchBarState<T> extends State<EasySearchBar<T>>
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark);
 
-    return WillPopScope(
-        onWillPop: widget.cancelableSuggestions
-            ? () {
+    return PopScope(
+      onPopInvoked: widget.cancelableSuggestions
+            ? (bool didPop) {
                 if (_hasOpenedOverlay) {
                   closeOverlay();
-                  return Future.value(false);
+                  return;
                 }
-                return Future.value(true);
               }
-            : () {
-                return Future.value(true);
-              },
-        child: RawKeyboardListener(
+            : (bool didPop) {},
+        child: KeyboardListener(
             focusNode: FocusNode(),
-            onKey: widget.cancelableSuggestions
+            onKeyEvent: widget.cancelableSuggestions
                 ? (event) {
-                    if (_hasOpenedOverlay &&
-                        event.isKeyPressed(LogicalKeyboardKey.escape)) {
+                    if (_hasOpenedOverlay && event.logicalKey == LogicalKeyboardKey.escape) {
                       closeOverlay();
                     }
                   }

@@ -151,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
 | searchClearIconTheme      | `IconThemeData`                                    |        :x:         | Can be used to set custom icon theme for the search clear textField button                                                              |                             |
 | searchTextDirection       | `TextDirection`                                    |        :x:         | Can be used to change text direction                                                              | TextDirection.ltr |
 | putActionsOnRight         | `bool`                                    | :x: | Can be used to determine if the actions button will be placed at right of the appbar                                                              | false |
- | cancelableSuggestions     | `bool`                                   | :x: | Can be used to allow the user to cancel the suggestions overlay by pressing escape or the back button on mobile                                    | false |
+| cancelableSuggestions     | `bool`                                   | :x: | Can be used to allow the user to cancel the suggestions overlay by pressing escape or the back button on mobile                                    | false |
 
 ## Issues & Suggestions
 If you encounter any issue you or want to leave a suggestion you can do it by filling an [issue](https://github.com/4inka/flutter_easy_search_bar/issues).
